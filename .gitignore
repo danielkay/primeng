@@ -4,7 +4,7 @@
 /dist
 /tmp
 /out-tsc
-/components
+#/components
 /resources
 /aot
 
