@@ -1,7 +1,7 @@
 import { NgModule, Component, ElementRef, Input, Output, Renderer2, EventEmitter, IterableDiffers, forwardRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomHandler } from '../dom/domhandler';
-import { ObjectUtils } from '../utils/ObjectUtils';
+import { ObjectUtils } from '../utils/objectutils';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 export var MULTISELECT_VALUE_ACCESSOR = {
     provide: NG_VALUE_ACCESSOR,

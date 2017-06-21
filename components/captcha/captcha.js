@@ -1,7 +1,8 @@
-import { NgModule, Component, EventEmitter, Input, NgZone, Output, ViewChild } from '@angular/core';
+import { NgModule, Component, EventEmitter, Input, NgZone, Output, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 var Captcha = (function () {
-    function Captcha(_zone) {
+    function Captcha(el, _zone) {
+        this.el = el;
         this._zone = _zone;
         this.siteKey = null;
         this.theme = 'light';
@@ -16,8 +17,9 @@ var Captcha = (function () {
     }
     Captcha.prototype.ngAfterViewInit = function () {
         var _this = this;
-        if (window.grecaptcha)
+        if (window.grecaptcha) {
             this.init();
+        }
         else {
             window[this.initCallback] = function () {
                 _this.init();
@@ -26,7 +28,7 @@ var Captcha = (function () {
     };
     Captcha.prototype.init = function () {
         var _this = this;
-        this._instance = window.grecaptcha.render(this.el.nativeElement, {
+        this._instance = window.grecaptcha.render(this.el.nativeElement.children[0], {
             'sitekey': this.siteKey,
             'theme': this.theme,
             'type': this.type,
@@ -66,11 +68,12 @@ export { Captcha };
 Captcha.decorators = [
     { type: Component, args: [{
                 selector: 'p-captcha',
-                template: "<div #target></div>"
+                template: "<div></div>"
             },] },
 ];
 /** @nocollapse */
 Captcha.ctorParameters = function () { return [
+    { type: ElementRef, },
     { type: NgZone, },
 ]; };
 Captcha.propDecorators = {
@@ -83,7 +86,6 @@ Captcha.propDecorators = {
     'initCallback': [{ type: Input },],
     'onResponse': [{ type: Output },],
     'onExpire': [{ type: Output },],
-    'el': [{ type: ViewChild, args: ['target',] },],
 };
 var CaptchaModule = (function () {
     function CaptchaModule() {

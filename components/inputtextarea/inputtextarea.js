@@ -1,8 +1,9 @@
-import { NgModule, Directive, ElementRef, HostListener, Input } from '@angular/core';
+import { NgModule, Directive, ElementRef, HostListener, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 var InputTextarea = (function () {
     function InputTextarea(el) {
         this.el = el;
+        this.onResize = new EventEmitter();
     }
     InputTextarea.prototype.ngOnInit = function () {
         this.rowsDefault = this.rows;
@@ -20,25 +21,26 @@ var InputTextarea = (function () {
     };
     InputTextarea.prototype.onFocus = function (e) {
         if (this.autoResize) {
-            this.resize();
+            this.resize(e);
         }
     };
     InputTextarea.prototype.onBlur = function (e) {
         if (this.autoResize) {
-            this.resize();
+            this.resize(e);
         }
     };
     InputTextarea.prototype.onKeyup = function (e) {
         if (this.autoResize) {
-            this.resize();
+            this.resize(e);
         }
     };
-    InputTextarea.prototype.resize = function () {
+    InputTextarea.prototype.resize = function (event) {
         var linesCount = 0, lines = this.el.nativeElement.value.split('\n');
         for (var i = lines.length - 1; i >= 0; --i) {
             linesCount += Math.floor((lines[i].length / this.colsDefault) + 1);
         }
         this.rows = (linesCount >= this.rowsDefault) ? (linesCount + 1) : this.rowsDefault;
+        this.onResize.emit(event || {});
     };
     return InputTextarea;
 }());
@@ -65,6 +67,7 @@ InputTextarea.propDecorators = {
     'autoResize': [{ type: Input },],
     'rows': [{ type: Input },],
     'cols': [{ type: Input },],
+    'onResize': [{ type: Output },],
     'onInput': [{ type: HostListener, args: ['input', ['$event'],] },],
     'onFocus': [{ type: HostListener, args: ['focus', ['$event'],] },],
     'onBlur': [{ type: HostListener, args: ['blur', ['$event'],] },],

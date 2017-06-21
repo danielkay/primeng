@@ -9,7 +9,6 @@ var UITreeRow = (function () {
         this.level = 0;
         this.labelExpand = "Expand";
         this.labelCollapse = "Collapse";
-        this.togglerColumnIndex = 0;
     }
     UITreeRow.prototype.ngOnInit = function () {
         this.node.parent = this.parentNode;
@@ -61,7 +60,7 @@ export { UITreeRow };
 UITreeRow.decorators = [
     { type: Component, args: [{
                 selector: '[pTreeRow]',
-                template: "\n        <div class=\"ui-treetable-row\" [ngClass]=\"{'ui-state-highlight':isSelected(),'ui-treetable-row-selectable':treeTable.selectionMode && node.selectable !== false}\">\n            <td *ngFor=\"let col of treeTable.columns; let i=index\" [ngStyle]=\"col.style\" [class]=\"col.styleClass\" (click)=\"onRowClick($event)\" (touchend)=\"onRowTouchEnd()\" (contextmenu)=\"onRowRightClick($event)\">\n                <a href=\"#\" *ngIf=\"i==togglerColumnIndex\" class=\"ui-treetable-toggler fa fa-fw ui-c\" [ngClass]=\"{'fa-caret-down':node.expanded,'fa-caret-right':!node.expanded}\"\n                    [ngStyle]=\"{'margin-left':level*16 + 'px','visibility': isLeaf() ? 'hidden' : 'visible'}\"\n                    (click)=\"toggle($event)\"\n                    [title]=\"node.expanded ? labelCollapse : labelExpand\">\n                </a>\n                <div class=\"ui-chkbox ui-treetable-checkbox\" *ngIf=\"treeTable.selectionMode == 'checkbox' && i==0\"><div class=\"ui-chkbox-box ui-widget ui-corner-all ui-state-default\">\n                    <span class=\"ui-chkbox-icon ui-c fa\" \n                        [ngClass]=\"{'fa-check':isSelected(),'fa-minus':node.partialSelected}\"></span></div></div\n                ><span *ngIf=\"!col.template\">{{resolveFieldData(node.data,col.field)}}</span>\n                <p-columnBodyTemplateLoader [column]=\"col\" [rowData]=\"node\" *ngIf=\"col.template\"></p-columnBodyTemplateLoader>\n            </td>\n        </div>\n        <div *ngIf=\"node.children && node.expanded\" class=\"ui-treetable-row\" style=\"display:table-row\">\n            <td [attr.colspan]=\"treeTable.columns.length\" class=\"ui-treetable-child-table-container\">\n                <table>\n                    <tbody pTreeRow *ngFor=\"let childNode of node.children\" [node]=\"childNode\" [level]=\"level+1\" [labelExpand]=\"labelExpand\" [labelCollapse]=\"labelCollapse\" [togglerColumnIndex]=\"togglerColumnIndex\" [parentNode]=\"node\"></tbody>\n                </table>\n            </td>\n        </div>\n    "
+                template: "\n        <div class=\"ui-treetable-row\" [ngClass]=\"{'ui-state-highlight':isSelected(),'ui-treetable-row-selectable':treeTable.selectionMode && node.selectable !== false}\">\n            <td *ngFor=\"let col of treeTable.columns; let i=index\" [ngStyle]=\"col.style\" [class]=\"col.styleClass\" (click)=\"onRowClick($event)\" (touchend)=\"onRowTouchEnd()\" (contextmenu)=\"onRowRightClick($event)\">\n                <a href=\"#\" *ngIf=\"i == treeTable.toggleColumnIndex\" class=\"ui-treetable-toggler fa fa-fw ui-c\" [ngClass]=\"{'fa-caret-down':node.expanded,'fa-caret-right':!node.expanded}\"\n                    [ngStyle]=\"{'margin-left':level*16 + 'px','visibility': isLeaf() ? 'hidden' : 'visible'}\"\n                    (click)=\"toggle($event)\"\n                    [title]=\"node.expanded ? labelCollapse : labelExpand\">\n                </a>\n                <div class=\"ui-chkbox ui-treetable-checkbox\" *ngIf=\"treeTable.selectionMode == 'checkbox' && i==0\"><div class=\"ui-chkbox-box ui-widget ui-corner-all ui-state-default\">\n                    <span class=\"ui-chkbox-icon ui-c fa\" \n                        [ngClass]=\"{'fa-check':isSelected(),'fa-minus':node.partialSelected}\"></span></div></div\n                ><span *ngIf=\"!col.template\">{{resolveFieldData(node.data,col.field)}}</span>\n                <p-columnBodyTemplateLoader [column]=\"col\" [rowData]=\"node\" *ngIf=\"col.template\"></p-columnBodyTemplateLoader>\n            </td>\n        </div>\n        <div *ngIf=\"node.children && node.expanded\" class=\"ui-treetable-row\" style=\"display:table-row\">\n            <td [attr.colspan]=\"treeTable.columns.length\" class=\"ui-treetable-child-table-container\">\n                <table>\n                    <tbody pTreeRow *ngFor=\"let childNode of node.children\" [node]=\"childNode\" [level]=\"level+1\" [labelExpand]=\"labelExpand\" [labelCollapse]=\"labelCollapse\" [parentNode]=\"node\"></tbody>\n                </table>\n            </td>\n        </div>\n    "
             },] },
 ];
 /** @nocollapse */
@@ -74,7 +73,6 @@ UITreeRow.propDecorators = {
     'level': [{ type: Input },],
     'labelExpand': [{ type: Input },],
     'labelCollapse': [{ type: Input },],
-    'togglerColumnIndex': [{ type: Input },],
 };
 var TreeTable = (function () {
     function TreeTable(el, domHandler, changeDetector, renderer) {
@@ -85,25 +83,14 @@ var TreeTable = (function () {
         this.labelExpand = "Expand";
         this.labelCollapse = "Collapse";
         this.metaKeySelection = true;
-        this.columnResizeMode = 'fit';
-        this.togglerColumnIndex = 0;
+        this.toggleColumnIndex = 0;
         this.selectionChange = new EventEmitter();
         this.onNodeSelect = new EventEmitter();
         this.onNodeUnselect = new EventEmitter();
         this.onNodeExpand = new EventEmitter();
         this.onNodeCollapse = new EventEmitter();
         this.onContextMenuSelect = new EventEmitter();
-        this.onColResize = new EventEmitter();
-        this.columnsChanged = false;
     }
-    TreeTable.prototype.ngAfterViewChecked = function () {
-        if (this.columnsChanged && this.el.nativeElement.offsetParent) {
-            if (this.resizableColumns) {
-                this.initResizableColumns();
-            }
-            this.columnsChanged = false;
-        }
-    };
     TreeTable.prototype.ngAfterContentInit = function () {
         var _this = this;
         this.initColumns();
@@ -114,72 +101,6 @@ var TreeTable = (function () {
     };
     TreeTable.prototype.initColumns = function () {
         this.columns = this.cols.toArray();
-        this.columnsChanged = true;
-    };
-    TreeTable.prototype.initResizableColumns = function () {
-        var _this = this;
-        this.resizerHelper = this.domHandler.findSingle(this.el.nativeElement, 'div.ui-column-resizer-helper');
-        this.fixColumnWidths();
-        this.documentColumnResizeListener = this.renderer.listen('document', 'mousemove', function (event) {
-            if (_this.columnResizing) {
-                _this.onColumnResize(event);
-            }
-        });
-        this.documentColumnResizeEndListener = this.renderer.listen('document', 'mouseup', function (event) {
-            if (_this.columnResizing) {
-                _this.columnResizing = false;
-                _this.onColumnResizeEnd(event);
-            }
-        });
-    };
-    TreeTable.prototype.fixColumnWidths = function () {
-        var columns = this.domHandler.find(this.el.nativeElement, 'th.ui-resizable-column');
-        var bodyCols;
-        for (var i = 0; i < columns.length; i++) {
-            columns[i].style.width = columns[i].offsetWidth + 'px';
-        }
-    };
-    TreeTable.prototype.onColumnResize = function (event) {
-        var container = this.el.nativeElement.children[0];
-        var containerLeft = this.domHandler.getOffset(container).left;
-        this.domHandler.addClass(container, 'ui-unselectable-text');
-        this.resizerHelper.style.height = container.offsetHeight + 'px';
-        this.resizerHelper.style.top = 0 + 'px';
-        if (event.pageX > containerLeft && event.pageX < (containerLeft + container.offsetWidth)) {
-            this.resizerHelper.style.left = (event.pageX - containerLeft) + 'px';
-        }
-        this.resizerHelper.style.display = 'block';
-    };
-    TreeTable.prototype.onColumnResizeEnd = function (event) {
-        var delta = this.resizerHelper.offsetLeft - this.lastResizerHelperX;
-        var columnWidth = this.resizeColumn.offsetWidth;
-        var newColumnWidth = columnWidth + delta;
-        var minWidth = this.resizeColumn.style.minWidth || 15;
-        if (columnWidth + delta > parseInt(minWidth)) {
-            if (this.columnResizeMode === 'fit') {
-                var nextColumn = this.resizeColumn.nextElementSibling;
-                var nextColumnWidth = nextColumn.offsetWidth - delta;
-                if (newColumnWidth > 15 && nextColumnWidth > 15) {
-                    this.resizeColumn.style.width = newColumnWidth + 'px';
-                    if (nextColumn) {
-                        nextColumn.style.width = nextColumnWidth + 'px';
-                    }
-                }
-            }
-            else if (this.columnResizeMode === 'expand') {
-                this.tableViewChild.nativeElement.parentElement.style.width = this.tableViewChild.nativeElement.parentElement.offsetWidth + delta + 'px';
-                this.resizeColumn.style.width = newColumnWidth + 'px';
-                var containerWidth = this.tableViewChild.nativeElement.parentElement.style.width;
-                this.el.nativeElement.children[0].style.width = containerWidth;
-            }
-            this.onColResize.emit({
-                element: this.resizeColumn,
-                delta: delta
-            });
-        }
-        this.resizerHelper.style.display = 'none';
-        this.resizeColumn = null;
-        this.domHandler.removeClass(this.el.nativeElement.children[0], 'ui-unselectable-text');
     };
     TreeTable.prototype.onRowClick = function (event, node) {
         var eventTarget = event.target;
@@ -284,13 +205,6 @@ var TreeTable = (function () {
             this.onContextMenuSelect.emit({ originalEvent: event, node: node });
         }
     };
-    TreeTable.prototype.initColumnResize = function (event) {
-        var container = this.el.nativeElement.children[0];
-        var containerLeft = this.domHandler.getOffset(container).left;
-        this.resizeColumn = event.target.parentElement;
-        this.columnResizing = true;
-        this.lastResizerHelperX = (event.pageX - containerLeft);
-    };
     TreeTable.prototype.findIndexInSelection = function (node) {
         var index = -1;
         if (this.selectionMode && this.selection) {
@@ -382,19 +296,13 @@ var TreeTable = (function () {
         }
         return false;
     };
-    TreeTable.prototype.ngOnDestroy = function () {
-        if (this.resizableColumns && this.documentColumnResizeListener && this.documentColumnResizeEndListener) {
-            this.documentColumnResizeListener();
-            this.documentColumnResizeEndListener();
-        }
-    };
     return TreeTable;
 }());
 export { TreeTable };
 TreeTable.decorators = [
     { type: Component, args: [{
                 selector: 'p-treeTable',
-                template: "\n        <div [ngClass]=\"{'ui-treetable ui-widget': true, 'ui-treetable-resizable':resizableColumns}\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <div class=\"ui-treetable-header ui-widget-header\" *ngIf=\"header\">\n                <ng-content select=\"p-header\"></ng-content>\n            </div>\n            <div class=\"ui-treetable-tablewrapper\">\n                <table #tbl class=\"ui-widget-content\">\n                    <thead>\n                        <tr class=\"ui-state-default\">\n                            <th #headerCell *ngFor=\"let col of columns; let lastCol=last \"  [ngStyle]=\"col.style\" [class]=\"col.styleClass\" \n                                [ngClass]=\"{'ui-state-default ui-unselectable-text': true, 'ui-resizable-column': resizableColumns}\">\n                                <span class=\"ui-column-resizer\" *ngIf=\"resizableColumns && ((columnResizeMode == 'fit' && !lastCol) || columnResizeMode == 'expand')\" (mousedown)=\"initColumnResize($event)\"></span>\n                                <span class=\"ui-column-title\" *ngIf=\"!col.headerTemplate\">{{col.header}}</span>\n                                <span class=\"ui-column-title\" *ngIf=\"col.headerTemplate\">\n                                    <p-columnHeaderTemplateLoader [column]=\"col\"></p-columnHeaderTemplateLoader>\n                                </span>\n                            </th>\n                        </tr>\n                    </thead>\n                    <tfoot *ngIf=\"hasFooter()\">\n                        <tr>\n                            <td *ngFor=\"let col of columns\" [ngStyle]=\"col.style\" [class]=\"col.styleClass\" [ngClass]=\"{'ui-state-default':true}\">\n                                <span class=\"ui-column-footer\" *ngIf=\"!col.footerTemplate\">{{col.footer}}</span>\n                                <span class=\"ui-column-footer\" *ngIf=\"col.footerTemplate\">\n                                    <p-columnFooterTemplateLoader [column]=\"col\"></p-columnFooterTemplateLoader>\n                                </span>\n                            </td>\n                        </tr>\n                    </tfoot>\n                    <tbody pTreeRow *ngFor=\"let node of value\" class=\"ui-treetable-data ui-widget-content\" [node]=\"node\" [level]=\"0\" [labelExpand]=\"labelExpand\" [labelCollapse]=\"labelCollapse\" [togglerColumnIndex]=\"togglerColumnIndex\"></tbody>\n                </table>\n            </div>\n            \n            <div class=\"ui-column-resizer-helper ui-state-highlight\" style=\"display:none\"></div>\n            <div class=\"ui-treetable-footer ui-widget-header\" *ngIf=\"footer\">\n                <ng-content select=\"p-footer\"></ng-content>\n            </div>\n        </div>\n    ",
+                template: "\n        <div [ngClass]=\"'ui-treetable ui-widget'\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <div class=\"ui-treetable-header ui-widget-header\" *ngIf=\"header\">\n                <ng-content select=\"p-header\"></ng-content>\n            </div>\n            <div class=\"ui-treetable-tablewrapper\">\n                <table #tbl class=\"ui-widget-content\">\n                    <thead>\n                        <tr class=\"ui-state-default\">\n                            <th #headerCell *ngFor=\"let col of columns; let lastCol=last \"  [ngStyle]=\"col.style\" [class]=\"col.styleClass\" \n                                [ngClass]=\"'ui-state-default ui-unselectable-text'\">\n                                <span class=\"ui-column-title\" *ngIf=\"!col.headerTemplate\">{{col.header}}</span>\n                                <span class=\"ui-column-title\" *ngIf=\"col.headerTemplate\">\n                                    <p-columnHeaderTemplateLoader [column]=\"col\"></p-columnHeaderTemplateLoader>\n                                </span>\n                            </th>\n                        </tr>\n                    </thead>\n                    <tfoot *ngIf=\"hasFooter()\">\n                        <tr>\n                            <td *ngFor=\"let col of columns\" [ngStyle]=\"col.style\" [class]=\"col.styleClass\" [ngClass]=\"{'ui-state-default':true}\">\n                                <span class=\"ui-column-footer\" *ngIf=\"!col.footerTemplate\">{{col.footer}}</span>\n                                <span class=\"ui-column-footer\" *ngIf=\"col.footerTemplate\">\n                                    <p-columnFooterTemplateLoader [column]=\"col\"></p-columnFooterTemplateLoader>\n                                </span>\n                            </td>\n                        </tr>\n                    </tfoot>\n                    <tbody pTreeRow *ngFor=\"let node of value\" class=\"ui-treetable-data ui-widget-content\" [node]=\"node\" [level]=\"0\" [labelExpand]=\"labelExpand\" [labelCollapse]=\"labelCollapse\"></tbody>\n                </table>\n            </div>\n            \n            <div class=\"ui-treetable-footer ui-widget-header\" *ngIf=\"footer\">\n                <ng-content select=\"p-footer\"></ng-content>\n            </div>\n        </div>\n    ",
                 providers: [DomHandler]
             },] },
 ];
@@ -415,16 +323,13 @@ TreeTable.propDecorators = {
     'labelCollapse': [{ type: Input },],
     'metaKeySelection': [{ type: Input },],
     'contextMenu': [{ type: Input },],
-    'resizableColumns': [{ type: Input },],
-    'columnResizeMode': [{ type: Input },],
-    'togglerColumnIndex': [{ type: Input },],
+    'toggleColumnIndex': [{ type: Input },],
     'selectionChange': [{ type: Output },],
     'onNodeSelect': [{ type: Output },],
     'onNodeUnselect': [{ type: Output },],
     'onNodeExpand': [{ type: Output },],
     'onNodeCollapse': [{ type: Output },],
     'onContextMenuSelect': [{ type: Output },],
-    'onColResize': [{ type: Output },],
     'header': [{ type: ContentChild, args: [Header,] },],
     'footer': [{ type: ContentChild, args: [Footer,] },],
     'cols': [{ type: ContentChildren, args: [Column,] },],

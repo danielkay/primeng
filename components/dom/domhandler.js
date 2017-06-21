@@ -61,12 +61,18 @@ var DomHandler = (function () {
         var targetHeight = target.offsetHeight;
         var targetWidth = target.offsetWidth;
         var targetOffset = target.getBoundingClientRect();
+        var windowScrollTop = this.getWindowScrollTop();
         var viewport = this.getViewport();
         var top, left;
-        if ((targetOffset.top + targetHeight + elementDimensions.height) > viewport.height)
+        if ((targetOffset.top + targetHeight + elementDimensions.height) > viewport.height) {
             top = -1 * (elementDimensions.height);
-        else
+            if (targetOffset.top + top < 0) {
+                top = 0;
+            }
+        }
+        else {
             top = targetHeight;
+        }
         if ((targetOffset.left + elementDimensions.width) > viewport.width)
             left = targetWidth - elementDimensions.width;
         else

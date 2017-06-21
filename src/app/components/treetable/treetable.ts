@@ -26,7 +26,7 @@ import {DomHandler} from '../dom/domhandler';
         <div *ngIf="node.children && node.expanded" class="ui-treetable-row" style="display:table-row">
             <td [attr.colspan]="treeTable.columns.length" class="ui-treetable-child-table-container">
                 <table>
-                    <tbody pTreeRow *ngFor="let childNode of node.children" [node]="childNode" [level]="level+1" [labelExpand]="labelExpand" [labelCollapse]="labelCollapse" [togglerColumnIndex]="togglerColumnIndex" [parentNode]="node"></tbody>
+                    <tbody pTreeRow *ngFor="let childNode of node.children" [node]="childNode" [level]="level+1" [labelExpand]="labelExpand" [labelCollapse]="labelCollapse" [parentNode]="node"></tbody>
                 </table>
             </td>
         </div>
@@ -131,7 +131,7 @@ export class UITreeRow implements OnInit {
                             </td>
                         </tr>
                     </tfoot>
-                    <tbody pTreeRow *ngFor="let node of value" class="ui-treetable-data ui-widget-content" [node]="node" [level]="0" [labelExpand]="labelExpand" [labelCollapse]="labelCollapse" [togglerColumnIndex]="togglerColumnIndex"></tbody>
+                    <tbody pTreeRow *ngFor="let node of value" class="ui-treetable-data ui-widget-content" [node]="node" [level]="0" [labelExpand]="labelExpand" [labelCollapse]="labelCollapse"></tbody>
                 </table>
             </div>
             
@@ -163,7 +163,7 @@ export class TreeTable implements AfterContentInit {
     @Input() contextMenu: any;
     
     @Input() toggleColumnIndex: number = 0;
-@Input() togglerColumnIndex: number = 0;
+
     @Output() selectionChange: EventEmitter<any> = new EventEmitter();
     
     @Output() onNodeSelect: EventEmitter<any> = new EventEmitter();

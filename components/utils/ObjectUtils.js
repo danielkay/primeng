@@ -72,6 +72,34 @@ var ObjectUtils = (function () {
             return null;
         }
     };
+    ObjectUtils.prototype.filter = function (value, fields, filterValue) {
+        var filteredItems = [];
+        if (value) {
+            for (var _i = 0, value_1 = value; _i < value_1.length; _i++) {
+                var item = value_1[_i];
+                for (var _a = 0, fields_1 = fields; _a < fields_1.length; _a++) {
+                    var field = fields_1[_a];
+                    if (String(this.resolveFieldData(item, field)).toLowerCase().indexOf(filterValue.toLowerCase()) > -1) {
+                        filteredItems.push(item);
+                        break;
+                    }
+                }
+            }
+        }
+        return filteredItems;
+    };
+    ObjectUtils.prototype.reorderArray = function (value, from, to) {
+        var target;
+        if (value && (from !== to)) {
+            if (to >= value.length) {
+                target = to - value.length;
+                while ((target--) + 1) {
+                    value.push(undefined);
+                }
+            }
+            value.splice(to, 0, value.splice(from, 1)[0]);
+        }
+    };
     return ObjectUtils;
 }());
 export { ObjectUtils };
@@ -80,4 +108,4 @@ ObjectUtils.decorators = [
 ];
 /** @nocollapse */
 ObjectUtils.ctorParameters = function () { return []; };
-//# sourceMappingURL=ObjectUtils.js.map
+//# sourceMappingURL=objectutils.js.map

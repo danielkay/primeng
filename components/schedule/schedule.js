@@ -29,6 +29,7 @@ var Schedule = (function () {
         this.onEventResizeStop = new EventEmitter();
         this.onEventResize = new EventEmitter();
         this.onViewRender = new EventEmitter();
+        this.onViewDestroy = new EventEmitter();
         this.differ = differs.find([]).create(null);
         this.initialized = false;
     }
@@ -159,6 +160,12 @@ var Schedule = (function () {
             },
             viewRender: function (view, element) {
                 _this.onViewRender.emit({
+                    'view': view,
+                    'element': element
+                });
+            },
+            viewDestroy: function (view, element) {
+                _this.onViewDestroy.emit({
                     'view': view,
                     'element': element
                 });
@@ -323,6 +330,7 @@ Schedule.propDecorators = {
     'onEventResizeStop': [{ type: Output },],
     'onEventResize': [{ type: Output },],
     'onViewRender': [{ type: Output },],
+    'onViewDestroy': [{ type: Output },],
 };
 var ScheduleModule = (function () {
     function ScheduleModule() {

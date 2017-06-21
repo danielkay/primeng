@@ -30,8 +30,12 @@ var Dialog = (function () {
             if (this.containerViewChild && this.containerViewChild.nativeElement) {
                 if (this._visible)
                     this.show();
-                else
-                    this.hide();
+                else {
+                    if (this.preventVisibleChangePropagation)
+                        this.preventVisibleChangePropagation = false;
+                    else
+                        this.hide();
+                }
             }
         },
         enumerable: true,
@@ -62,11 +66,13 @@ var Dialog = (function () {
     Dialog.prototype.hide = function () {
         this.onHide.emit({});
         this.unbindMaskClickListener();
+        this.unbindGlobalListeners();
         if (this.modal) {
             this.disableModality();
         }
     };
     Dialog.prototype.close = function (event) {
+        this.preventVisibleChangePropagation = true;
         this.hide();
         this.visibleChange.emit(false);
         event.preventDefault();
@@ -203,6 +209,9 @@ var Dialog = (function () {
     };
     Dialog.prototype.unbindGlobalListeners = function () {
         this.unbindDocumentDragListener();
+        this.unbindDocumentResizeListeners();
+        this.unbindDocumentResponsiveListener();
+        this.unbindDocumentEscapeListener();
     };
     Dialog.prototype.bindDocumentDragListener = function () {
         var _this = this;
@@ -253,7 +262,7 @@ var Dialog = (function () {
             }
         });
     };
-    Dialog.prototype.unbindDocumentResponseListener = function () {
+    Dialog.prototype.unbindDocumentResponsiveListener = function () {
         if (this.documentResponsiveListener) {
             this.documentResponsiveListener();
             this.documentResponsiveListener = null;

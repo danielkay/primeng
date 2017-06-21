@@ -62,9 +62,6 @@ var Carousel = (function () {
     };
     Carousel.prototype.ngAfterViewInit = function () {
         var _this = this;
-        this.container = this.el.nativeElement.children[0];
-        this.viewport = this.domHandler.findSingle(this.el.nativeElement, 'div.ui-carousel-viewport');
-        this.itemsContainer = this.domHandler.findSingle(this.el.nativeElement, 'ul.ui-carousel-items');
         if (this.responsive) {
             this.documentResponsiveListener = this.renderer.listen('window', 'resize', function (event) {
                 _this.updateState();
@@ -93,11 +90,11 @@ var Carousel = (function () {
         if (this.autoplayInterval) {
             this.stopAutoplay();
         }
-        this.items = this.domHandler.find(this.itemsContainer, 'li');
+        this.items = this.domHandler.find(this.itemsViewChild.nativeElement, 'li');
         this.calculateColumns();
         this.calculateItemWidths();
         if (!this.responsive) {
-            this.container.style.width = (this.domHandler.width(this.container)) + 'px';
+            this.containerViewChild.nativeElement.style.width = (this.domHandler.width(this.containerViewChild.nativeElement)) + 'px';
         }
         if (this.autoplayInterval) {
             this.circular = true;
@@ -111,7 +108,7 @@ var Carousel = (function () {
         var firstItem = (this.items && this.items.length) ? this.items[0] : null;
         if (firstItem) {
             for (var i = 0; i < this.items.length; i++) {
-                this.items[i].style.width = ((this.domHandler.innerWidth(this.viewport) - (this.domHandler.getHorizontalMargin(firstItem) * this.columns)) / this.columns) + 'px';
+                this.items[i].style.width = ((this.domHandler.innerWidth(this.viewportViewChild.nativeElement) - (this.domHandler.getHorizontalMargin(firstItem) * this.columns)) / this.columns) + 'px';
             }
         }
     };
@@ -146,7 +143,7 @@ var Carousel = (function () {
     Carousel.prototype.setPage = function (p, enforce) {
         if (p !== this.page || enforce) {
             this.page = p;
-            this.left = (-1 * (this.domHandler.innerWidth(this.viewport) * this.page));
+            this.left = (-1 * (this.domHandler.innerWidth(this.viewportViewChild.nativeElement) * this.page));
             this.firstVisible = this.page * this.columns;
             this.onPage.emit({
                 page: this.page
@@ -225,7 +222,7 @@ export { Carousel };
 Carousel.decorators = [
     { type: Component, args: [{
                 selector: 'p-carousel',
-                template: "\n        <div #container [ngClass]=\"{'ui-carousel ui-widget ui-widget-content ui-corner-all':true}\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <div class=\"ui-carousel-header ui-widget-header ui-corner-all\">\n                <span class=\"ui-carousel-header-title\">{{headerText}}</span>\n                <span class=\"ui-carousel-button ui-carousel-next-button fa fa-arrow-circle-right\" (click)=\"onNextNav()\" \n                        [ngClass]=\"{'ui-state-disabled':(page === (totalPages-1)) && !circular}\"></span>\n                <span class=\"ui-carousel-button ui-carousel-prev-button fa fa-arrow-circle-left\" (click)=\"onPrevNav()\" \n                        [ngClass]=\"{'ui-state-disabled':(page === 0 && !circular)}\"></span>\n                <div *ngIf=\"displayPageLinks\" class=\"ui-carousel-page-links\">\n                    <a href=\"#\" (click)=\"setPageWithLink($event,i)\" class=\"ui-carousel-page-link fa fa-circle-o\" *ngFor=\"let links of anchorPageLinks;let i=index\" [ngClass]=\"{'fa-dot-circle-o':page===i}\"></a>\n                </div>\n                <select *ngIf=\"displayPageDropdown\" class=\"ui-carousel-dropdown ui-widget ui-state-default ui-corner-left\" [value]=\"page\" (change)=\"onDropdownChange($event.target.value)\">\n                    <option *ngFor=\"let option of selectDropdownOptions\" [value]=\"option\" [selected]=\"value == option\">{{option+1}}</option>\n                </select>\n                <select *ngIf=\"responsive\" class=\"ui-carousel-mobiledropdown ui-widget ui-state-default ui-corner-left\" [value]=\"page\" (change)=\"onDropdownChange($event.target.value)\"\n                    [style.display]=\"shrinked ? 'block' : 'none'\">\n                    <option *ngFor=\"let option of mobileDropdownOptions\" [value]=\"option\" [selected]=\"value == option\">{{option+1}}</option>\n                </select>\n            </div>\n            <div class=\"ui-carousel-viewport\">\n                <ul class=\"ui-carousel-items\" [style.left.px]=\"left\" [style.transitionProperty]=\"'left'\" \n                            [style.transitionDuration]=\"effectDuration\" [style.transitionTimingFunction]=\"easing\">\n                    <li *ngFor=\"let item of value\" class=\"ui-carousel-item ui-widget-content ui-corner-all\">\n                        <ng-template [pTemplateWrapper]=\"itemTemplate\" [item]=\"item\"></ng-template>\n                    </li>\n                </ul>\n            </div>\n        </div>\n    ",
+                template: "\n        <div #container [ngClass]=\"{'ui-carousel ui-widget ui-widget-content ui-corner-all':true}\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <div class=\"ui-carousel-header ui-widget-header ui-corner-all\">\n                <span class=\"ui-carousel-header-title\">{{headerText}}</span>\n                <span class=\"ui-carousel-button ui-carousel-next-button fa fa-arrow-circle-right\" (click)=\"onNextNav()\" \n                        [ngClass]=\"{'ui-state-disabled':(page === (totalPages-1)) && !circular}\" *ngIf=\"value&&value.length\"></span>\n                <span class=\"ui-carousel-button ui-carousel-prev-button fa fa-arrow-circle-left\" (click)=\"onPrevNav()\" \n                        [ngClass]=\"{'ui-state-disabled':(page === 0 && !circular)}\" *ngIf=\"value&&value.length\"></span>\n                <div *ngIf=\"displayPageLinks\" class=\"ui-carousel-page-links\">\n                    <a href=\"#\" (click)=\"setPageWithLink($event,i)\" class=\"ui-carousel-page-link fa fa-circle-o\" *ngFor=\"let links of anchorPageLinks;let i=index\" [ngClass]=\"{'fa-dot-circle-o':page===i}\"></a>\n                </div>\n                <select *ngIf=\"displayPageDropdown\" class=\"ui-carousel-dropdown ui-widget ui-state-default ui-corner-left\" [value]=\"page\" (change)=\"onDropdownChange($event.target.value)\">\n                    <option *ngFor=\"let option of selectDropdownOptions\" [value]=\"option\" [selected]=\"value == option\">{{option+1}}</option>\n                </select>\n                <select *ngIf=\"responsive&&value&&value.length\" class=\"ui-carousel-mobiledropdown ui-widget ui-state-default ui-corner-left\" [value]=\"page\" (change)=\"onDropdownChange($event.target.value)\"\n                    [style.display]=\"shrinked ? 'block' : 'none'\">\n                    <option *ngFor=\"let option of mobileDropdownOptions\" [value]=\"option\" [selected]=\"value == option\">{{option+1}}</option>\n                </select>\n            </div>\n            <div #viewport class=\"ui-carousel-viewport\">\n                <ul #items class=\"ui-carousel-items\" [style.left.px]=\"left\" [style.transitionProperty]=\"'left'\" \n                            [style.transitionDuration]=\"effectDuration\" [style.transitionTimingFunction]=\"easing\">\n                    <li *ngFor=\"let item of value\" class=\"ui-carousel-item ui-widget-content ui-corner-all\">\n                        <ng-template [pTemplateWrapper]=\"itemTemplate\" [item]=\"item\"></ng-template>\n                    </li>\n                </ul>\n            </div>\n        </div>\n    ",
                 providers: [DomHandler]
             },] },
 ];
@@ -249,8 +246,10 @@ Carousel.propDecorators = {
     'style': [{ type: Input },],
     'styleClass': [{ type: Input },],
     'onPage': [{ type: Output },],
-    'containerViewChild': [{ type: ViewChild, args: ['container',] },],
     'templates': [{ type: ContentChildren, args: [PrimeTemplate,] },],
+    'containerViewChild': [{ type: ViewChild, args: ['container',] },],
+    'viewportViewChild': [{ type: ViewChild, args: ['viewport',] },],
+    'itemsViewChild': [{ type: ViewChild, args: ['items',] },],
     'value': [{ type: Input },],
 };
 var CarouselModule = (function () {

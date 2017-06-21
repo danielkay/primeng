@@ -34,6 +34,7 @@ var Calendar = (function () {
         this.dataType = 'date';
         this.onFocus = new EventEmitter();
         this.onBlur = new EventEmitter();
+        this.onClose = new EventEmitter();
         this.onSelect = new EventEmitter();
         this.onInput = new EventEmitter();
         this._locale = {
@@ -406,7 +407,7 @@ var Calendar = (function () {
     };
     Calendar.prototype.onButtonClick = function (event, inputfield) {
         this.closeOverlay = false;
-        if (!this.overlay.offsetParent) {
+        if (!this.overlay.offsetParent || this.overlay.style.display === 'none') {
             inputfield.focus();
             this.showOverlay();
         }
@@ -848,6 +849,7 @@ var Calendar = (function () {
             this.documentClickListener = this.renderer.listen('document', 'click', function () {
                 if (_this.closeOverlay) {
                     _this.overlayVisible = false;
+                    _this.onClose.emit(event);
                 }
                 _this.closeOverlay = true;
                 _this.dateClick = false;
@@ -942,6 +944,7 @@ Calendar.propDecorators = {
     'utc': [{ type: Input },],
     'onFocus': [{ type: Output },],
     'onBlur': [{ type: Output },],
+    'onClose': [{ type: Output },],
     'onSelect': [{ type: Output },],
     'onInput': [{ type: Output },],
     'tabindex': [{ type: Input },],

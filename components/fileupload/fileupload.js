@@ -17,6 +17,9 @@ var FileUpload = (function () {
         this.chooseLabel = 'Choose';
         this.uploadLabel = 'Upload';
         this.cancelLabel = 'Cancel';
+        this.showUploadButton = true;
+        this.showCancelButton = true;
+        this.mode = 'advanced';
         this.onBeforeUpload = new EventEmitter();
         this.onBeforeSend = new EventEmitter();
         this.onUpload = new EventEmitter();
@@ -24,6 +27,7 @@ var FileUpload = (function () {
         this.onClear = new EventEmitter();
         this.onRemove = new EventEmitter();
         this.onSelect = new EventEmitter();
+        this.uploadHandler = new EventEmitter();
         this.progress = 0;
     }
     FileUpload.prototype.ngOnInit = function () {
@@ -120,37 +124,44 @@ var FileUpload = (function () {
     };
     FileUpload.prototype.upload = function () {
         var _this = this;
-        this.msgs = [];
-        var xhr = new XMLHttpRequest(), formData = new FormData();
-        this.onBeforeUpload.emit({
-            'xhr': xhr,
-            'formData': formData
-        });
-        for (var i = 0; i < this.files.length; i++) {
-            formData.append(this.name, this.files[i], this.files[i].name);
+        if (this.customUpload) {
+            this.uploadHandler.emit({
+                files: this.files
+            });
         }
-        xhr.upload.addEventListener('progress', function (e) {
-            if (e.lengthComputable) {
-                _this.progress = Math.round((e.loaded * 100) / e.total);
+        else {
+            this.msgs = [];
+            var xhr_1 = new XMLHttpRequest(), formData = new FormData();
+            this.onBeforeUpload.emit({
+                'xhr': xhr_1,
+                'formData': formData
+            });
+            for (var i = 0; i < this.files.length; i++) {
+                formData.append(this.name, this.files[i], this.files[i].name);
             }
-        }, false);
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                _this.progress = 0;
-                if (xhr.status >= 200 && xhr.status < 300)
-                    _this.onUpload.emit({ xhr: xhr, files: _this.files });
-                else
-                    _this.onError.emit({ xhr: xhr, files: _this.files });
-                _this.clear();
-            }
-        };
-        xhr.open(this.method, this.url, true);
-        this.onBeforeSend.emit({
-            'xhr': xhr,
-            'formData': formData
-        });
-        xhr.withCredentials = this.withCredentials;
-        xhr.send(formData);
+            xhr_1.upload.addEventListener('progress', function (e) {
+                if (e.lengthComputable) {
+                    _this.progress = Math.round((e.loaded * 100) / e.total);
+                }
+            }, false);
+            xhr_1.onreadystatechange = function () {
+                if (xhr_1.readyState == 4) {
+                    _this.progress = 0;
+                    if (xhr_1.status >= 200 && xhr_1.status < 300)
+                        _this.onUpload.emit({ xhr: xhr_1, files: _this.files });
+                    else
+                        _this.onError.emit({ xhr: xhr_1, files: _this.files });
+                    _this.clear();
+                }
+            };
+            xhr_1.open(this.method, this.url, true);
+            this.onBeforeSend.emit({
+                'xhr': xhr_1,
+                'formData': formData
+            });
+            xhr_1.withCredentials = this.withCredentials;
+            xhr_1.send(formData);
+        }
     };
     FileUpload.prototype.clear = function () {
         this.files = [];
@@ -196,13 +207,18 @@ var FileUpload = (function () {
         var k = 1000, dm = 3, sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     };
+    FileUpload.prototype.onSimpleUploaderClick = function (event) {
+        if (this.hasFiles()) {
+            this.upload();
+        }
+    };
     return FileUpload;
 }());
 export { FileUpload };
 FileUpload.decorators = [
     { type: Component, args: [{
                 selector: 'p-fileUpload',
-                template: "\n        <div [ngClass]=\"'ui-fileupload ui-widget'\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <div class=\"ui-fileupload-buttonbar ui-widget-header ui-corner-top\">\n                <button type=\"button\" [label]=\"chooseLabel\" icon=\"fa-plus\" pButton class=\"ui-fileupload-choose\" (click)=\"onChooseClick($event, fileinput)\" [disabled]=\"disabled\"> \n                    <input #fileinput type=\"file\" (change)=\"onFileSelect($event)\" [multiple]=\"multiple\" [accept]=\"accept\" [disabled]=\"disabled\">\n                </button>\n\n                <button *ngIf=\"!auto\" type=\"button\" [label]=\"uploadLabel\" icon=\"fa-upload\" pButton (click)=\"upload()\" [disabled]=\"!hasFiles()\"></button>\n                <button *ngIf=\"!auto\" type=\"button\" [label]=\"cancelLabel\" icon=\"fa-close\" pButton (click)=\"clear()\" [disabled]=\"!hasFiles()\"></button>\n            \n                <p-templateLoader [template]=\"toolbarTemplate\"></p-templateLoader>\n            </div>\n            <div [ngClass]=\"{'ui-fileupload-content ui-widget-content ui-corner-bottom':true,'ui-fileupload-highlight':dragHighlight}\" \n                (dragenter)=\"onDragEnter($event)\" (dragover)=\"onDragOver($event)\" (dragleave)=\"onDragLeave($event)\" (drop)=\"onDrop($event)\">\n                <p-progressBar [value]=\"progress\" [showValue]=\"false\" *ngIf=\"hasFiles()\"></p-progressBar>\n                \n                <p-messages [value]=\"msgs\"></p-messages>\n                \n                <div class=\"ui-fileupload-files\" *ngIf=\"hasFiles()\">\n                    <div *ngIf=\"!fileTemplate\">\n                        <div class=\"ui-fileupload-row\" *ngFor=\"let file of files; let i = index;\">\n                            <div><img [src]=\"file.objectURL\" *ngIf=\"isImage(file)\" [width]=\"previewWidth\" /></div>\n                            <div>{{file.name}}</div>\n                            <div>{{formatSize(file.size)}}</div>\n                            <div><button type=\"button\" icon=\"fa-close\" pButton (click)=\"remove(i)\"></button></div>\n                        </div>\n                    </div>\n                    <div *ngIf=\"fileTemplate\">\n                        <ng-template ngFor [ngForOf]=\"files\" [ngForTemplate]=\"fileTemplate\"></ng-template>\n                    </div>\n                </div>\n                \n                <p-templateLoader [template]=\"contentTemplate\"></p-templateLoader>\n            </div>\n        </div>\n    "
+                template: "\n        <div [ngClass]=\"'ui-fileupload ui-widget'\" [ngStyle]=\"style\" [class]=\"styleClass\" *ngIf=\"mode === 'advanced'\">\n            <div class=\"ui-fileupload-buttonbar ui-widget-header ui-corner-top\">\n                <button type=\"button\" [label]=\"chooseLabel\" icon=\"fa-plus\" pButton class=\"ui-fileupload-choose\" (click)=\"onChooseClick($event, fileinput)\" [disabled]=\"disabled\"> \n                    <input #fileinput type=\"file\" (change)=\"onFileSelect($event)\" [multiple]=\"multiple\" [accept]=\"accept\" [disabled]=\"disabled\">\n                </button>\n\n                <button *ngIf=\"!auto&&showUploadButton\" type=\"button\" [label]=\"uploadLabel\" icon=\"fa-upload\" pButton (click)=\"upload()\" [disabled]=\"!hasFiles()\"></button>\n                <button *ngIf=\"!auto&&showCancelButton\" type=\"button\" [label]=\"cancelLabel\" icon=\"fa-close\" pButton (click)=\"clear()\" [disabled]=\"!hasFiles()\"></button>\n            \n                <p-templateLoader [template]=\"toolbarTemplate\"></p-templateLoader>\n            </div>\n            <div [ngClass]=\"{'ui-fileupload-content ui-widget-content ui-corner-bottom':true,'ui-fileupload-highlight':dragHighlight}\" \n                (dragenter)=\"onDragEnter($event)\" (dragover)=\"onDragOver($event)\" (dragleave)=\"onDragLeave($event)\" (drop)=\"onDrop($event)\">\n                <p-progressBar [value]=\"progress\" [showValue]=\"false\" *ngIf=\"hasFiles()\"></p-progressBar>\n                \n                <p-messages [value]=\"msgs\"></p-messages>\n                \n                <div class=\"ui-fileupload-files\" *ngIf=\"hasFiles()\">\n                    <div *ngIf=\"!fileTemplate\">\n                        <div class=\"ui-fileupload-row\" *ngFor=\"let file of files; let i = index;\">\n                            <div><img [src]=\"file.objectURL\" *ngIf=\"isImage(file)\" [width]=\"previewWidth\" /></div>\n                            <div>{{file.name}}</div>\n                            <div>{{formatSize(file.size)}}</div>\n                            <div><button type=\"button\" icon=\"fa-close\" pButton (click)=\"remove(i)\"></button></div>\n                        </div>\n                    </div>\n                    <div *ngIf=\"fileTemplate\">\n                        <ng-template ngFor [ngForOf]=\"files\" [ngForTemplate]=\"fileTemplate\"></ng-template>\n                    </div>\n                </div>\n                <p-templateLoader [template]=\"contentTemplate\"></p-templateLoader>\n            </div>\n        </div>\n        <span class=\"ui-fileupload-simple ui-widget\" *ngIf=\"mode === 'basic'\" [ngClass]=\"{'ui-fileupload-simple-selected': hasFiles()}\">\n            <button class=\"ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left\" (click)=\"onSimpleUploaderClick($event)\">\n                <span class=\"ui-button-icon-left fa\" [ngClass]=\"{'fa-plus': !hasFiles()||auto, 'fa-upload': hasFiles()&&!auto}\"></span>\n                <span class=\"ui-button-text ui-c\">{{auto ? chooseLabel : hasFiles() ? files[0].name : chooseLabel}}</span>\n                <input type=\"file\" [accept]=\"accept\" [multiple]=\"multiple\" [disabled]=\"disabled\" tabindex=\"-1\" \n                    (change)=\"onFileSelect($event)\" *ngIf=\"!hasFiles()\">\n            </button>\n        </span>\n    "
             },] },
 ];
 /** @nocollapse */
@@ -229,6 +245,10 @@ FileUpload.propDecorators = {
     'chooseLabel': [{ type: Input },],
     'uploadLabel': [{ type: Input },],
     'cancelLabel': [{ type: Input },],
+    'showUploadButton': [{ type: Input },],
+    'showCancelButton': [{ type: Input },],
+    'mode': [{ type: Input },],
+    'customUpload': [{ type: Input },],
     'onBeforeUpload': [{ type: Output },],
     'onBeforeSend': [{ type: Output },],
     'onUpload': [{ type: Output },],
@@ -236,6 +256,7 @@ FileUpload.propDecorators = {
     'onClear': [{ type: Output },],
     'onRemove': [{ type: Output },],
     'onSelect': [{ type: Output },],
+    'uploadHandler': [{ type: Output },],
     'templates': [{ type: ContentChildren, args: [PrimeTemplate,] },],
 };
 var FileUploadModule = (function () {

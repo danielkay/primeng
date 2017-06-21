@@ -5,7 +5,6 @@ var Growl = (function () {
     function Growl(el, domHandler) {
         this.el = el;
         this.domHandler = domHandler;
-        this.sticky = false;
         this.life = 3000;
         this.onClose = new EventEmitter();
         this.valueChange = new EventEmitter();

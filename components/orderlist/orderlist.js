@@ -1,15 +1,18 @@
-import { NgModule, Component, ElementRef, Input, Output, ContentChildren, EventEmitter } from '@angular/core';
+import { NgModule, Component, ElementRef, Input, Output, ContentChildren, EventEmitter, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from '../button/button';
 import { SharedModule, PrimeTemplate } from '../common/shared';
 import { DomHandler } from '../dom/domhandler';
+import { ObjectUtils } from '../utils/objectutils';
 var OrderList = (function () {
-    function OrderList(el, domHandler) {
+    function OrderList(el, domHandler, objectUtils) {
         this.el = el;
         this.domHandler = domHandler;
+        this.objectUtils = objectUtils;
         this.metaKeySelection = true;
         this.onReorder = new EventEmitter();
         this.onSelectionChange = new EventEmitter();
+        this.onFilterEvent = new EventEmitter();
     }
     OrderList.prototype.ngAfterViewInit = function () {
         this.listContainer = this.domHandler.findSingle(this.el.nativeElement, 'ul.ui-orderlist-list');
@@ -40,6 +43,19 @@ var OrderList = (function () {
             this.movedDown = false;
         }
     };
+    Object.defineProperty(OrderList.prototype, "value", {
+        get: function () {
+            return this._value;
+        },
+        set: function (val) {
+            this._value = val ? val.slice() : null;
+            if (this.filterValue) {
+                this.filter();
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
     OrderList.prototype.onItemClick = function (event, item) {
         var index = this.findIndexInList(item, this.selectedItems);
         var selected = (index != -1);
@@ -65,6 +81,30 @@ var OrderList = (function () {
         }
         this.onSelectionChange.emit({ originalEvent: event, value: this.selectedItems });
         this.itemTouched = false;
+    };
+    OrderList.prototype.onFilterKeyup = function (event) {
+        this.filterValue = event.target.value.trim().toLowerCase();
+        this.filter();
+        this.onFilterEvent.emit({
+            originalEvent: event,
+            value: this.visibleOptions
+        });
+    };
+    OrderList.prototype.filter = function () {
+        var searchFields = this.filterBy.split(',');
+        this.visibleOptions = this.objectUtils.filter(this.value, searchFields, this.filterValue);
+    };
+    OrderList.prototype.isItemVisible = function (item) {
+        if (this.filterValue && this.filterValue.trim().length) {
+            for (var i = 0; i < this.visibleOptions.length; i++) {
+                if (item == this.visibleOptions[i]) {
+                    return true;
+                }
+            }
+        }
+        else {
+            return true;
+        }
     };
     OrderList.prototype.onItemTouchEnd = function (event) {
         this.itemTouched = true;
@@ -157,32 +197,74 @@ var OrderList = (function () {
             listElement.scrollTop = listElement.scrollHeight;
         }
     };
+    OrderList.prototype.onDragStart = function (event, index) {
+        this.dragging = true;
+        this.draggedItemIndex = index;
+        if (this.dragdropScope) {
+            event.dataTransfer.setData("text", this.dragdropScope);
+        }
+    };
+    OrderList.prototype.onDragOver = function (event, index) {
+        if (this.draggedItemIndex !== index && this.draggedItemIndex + 1 !== index) {
+            this.dragOverItemIndex = index;
+            event.preventDefault();
+        }
+    };
+    OrderList.prototype.onDragLeave = function (event, index) {
+        this.dragOverItemIndex = null;
+    };
+    OrderList.prototype.onDrop = function (event, index) {
+        var dropIndex = (this.draggedItemIndex > index) ? index : (index === 0) ? 0 : index - 1;
+        this.objectUtils.reorderArray(this.value, this.draggedItemIndex, dropIndex);
+        this.dragOverItemIndex = null;
+    };
+    OrderList.prototype.onDragEnd = function (event) {
+        this.dragging = false;
+    };
+    OrderList.prototype.onListMouseMove = function (event) {
+        if (this.dragging) {
+            var offsetY = this.listViewChild.nativeElement.getBoundingClientRect().top + document.body.scrollTop;
+            var bottomDiff = (offsetY + this.listViewChild.nativeElement.clientHeight) - event.pageY;
+            var topDiff = (event.pageY - offsetY);
+            if (bottomDiff < 25 && bottomDiff > 0)
+                this.listViewChild.nativeElement.scrollTop += 15;
+            else if (topDiff < 25 && topDiff > 0)
+                this.listViewChild.nativeElement.scrollTop -= 15;
+        }
+    };
     return OrderList;
 }());
 export { OrderList };
 OrderList.decorators = [
     { type: Component, args: [{
                 selector: 'p-orderList',
-                template: "\n        <div [ngClass]=\"{'ui-orderlist ui-grid ui-widget':true,'ui-grid-responsive':responsive}\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <div class=\"ui-grid-row\">\n                <div class=\"ui-orderlist-controls ui-grid-col-2\">\n                    <button type=\"button\" pButton icon=\"fa-angle-up\" (click)=\"moveUp($event,listelement)\"></button>\n                    <button type=\"button\" pButton icon=\"fa-angle-double-up\" (click)=\"moveTop($event,listelement)\"></button>\n                    <button type=\"button\" pButton icon=\"fa-angle-down\" (click)=\"moveDown($event,listelement)\"></button>\n                    <button type=\"button\" pButton icon=\"fa-angle-double-down\" (click)=\"moveBottom($event,listelement)\"></button>\n                </div>\n                <div class=\"ui-grid-col-10\">\n                    <div class=\"ui-orderlist-caption ui-widget-header ui-corner-top\" *ngIf=\"header\">{{header}}</div>\n                    <ul #listelement class=\"ui-widget-content ui-orderlist-list ui-corner-bottom\" [ngStyle]=\"listStyle\">\n                        <li *ngFor=\"let item of value\" class=\"ui-orderlist-item\"\n                            [ngClass]=\"{'ui-state-highlight':isSelected(item)}\" \n                            (click)=\"onItemClick($event,item)\" (touchend)=\"onItemTouchEnd($event)\">\n                            <ng-template [pTemplateWrapper]=\"itemTemplate\" [item]=\"item\"></ng-template>\n                        </li>\n                    </ul>\n                </div>\n            </div>\n        </div>\n    ",
-                providers: [DomHandler]
+                template: "\n        <div [ngClass]=\"{'ui-orderlist ui-widget':true,'ui-orderlist-responsive':responsive}\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <div class=\"ui-orderlist-controls\">\n                <button type=\"button\" pButton icon=\"fa-angle-up\" (click)=\"moveUp($event,listelement)\"></button>\n                <button type=\"button\" pButton icon=\"fa-angle-double-up\" (click)=\"moveTop($event,listelement)\"></button>\n                <button type=\"button\" pButton icon=\"fa-angle-down\" (click)=\"moveDown($event,listelement)\"></button>\n                <button type=\"button\" pButton icon=\"fa-angle-double-down\" (click)=\"moveBottom($event,listelement)\"></button>\n            </div>\n            <div class=\"ui-orderlist-list-container\">\n                <div class=\"ui-orderlist-caption ui-widget-header ui-corner-top\" *ngIf=\"header\">{{header}}</div>\n                <div class=\"ui-orderlist-filter-container ui-widget-content\" *ngIf=\"filterBy\">\n                    <input type=\"text\" role=\"textbox\" (keyup)=\"onFilterKeyup($event)\" class=\"ui-inputtext ui-widget ui-state-default ui-corner-all\" [disabled]=\"disabled\" [attr.placeholder]=\"filterPlaceholder\">\n                    <span class=\"fa fa-search\"></span>\n                </div>\n                <ul #listelement class=\"ui-widget-content ui-orderlist-list ui-corner-bottom\" [ngStyle]=\"listStyle\" (dragover)=\"onListMouseMove($event)\">\n                    <ng-template ngFor let-item [ngForOf]=\"value\" let-i=\"index\" let-l=\"last\">\n                        <li class=\"ui-orderlist-droppoint\" *ngIf=\"dragdrop && isItemVisible(item)\" (dragover)=\"onDragOver($event, i)\" (drop)=\"onDrop($event, i)\" (dragleave)=\"onDragLeave($event)\" \n                            [ngClass]=\"{'ui-state-highlight': (i === dragOverItemIndex)}\"></li>\n                        <li class=\"ui-orderlist-item\"\n                            [ngClass]=\"{'ui-state-highlight':isSelected(item)}\" \n                            (click)=\"onItemClick($event,item)\" (touchend)=\"onItemTouchEnd($event)\"\n                            [style.display]=\"isItemVisible(item) ? 'block' : 'none'\"\n                            [draggable]=\"dragdrop\" (dragstart)=\"onDragStart($event, i)\" (dragend)=\"onDragEnd($event)\">\n                            <ng-template [pTemplateWrapper]=\"itemTemplate\" [item]=\"item\"></ng-template>\n                        </li>\n                        <li class=\"ui-orderlist-droppoint\" *ngIf=\"dragdrop && l\" (dragover)=\"onDragOver($event, i + 1)\" (drop)=\"onDrop($event, i + 1)\" (dragleave)=\"onDragLeave($event)\" \n                            [ngClass]=\"{'ui-state-highlight': (i + 1 === dragOverItemIndex)}\"></li>\n                    </ng-template>\n                </ul>\n            </div>\n        </div>\n    ",
+                providers: [DomHandler, ObjectUtils]
             },] },
 ];
 /** @nocollapse */
 OrderList.ctorParameters = function () { return [
     { type: ElementRef, },
     { type: DomHandler, },
+    { type: ObjectUtils, },
 ]; };
 OrderList.propDecorators = {
-    'value': [{ type: Input },],
     'header': [{ type: Input },],
     'style': [{ type: Input },],
     'styleClass': [{ type: Input },],
     'listStyle': [{ type: Input },],
     'responsive': [{ type: Input },],
+    'filterBy': [{ type: Input },],
+    'filterPlaceholder': [{ type: Input },],
     'metaKeySelection': [{ type: Input },],
+    'dragdrop': [{ type: Input },],
+    'dragdropScope': [{ type: Input },],
     'onReorder': [{ type: Output },],
     'onSelectionChange': [{ type: Output },],
+    'onFilterEvent': [{ type: Output },],
+    'listViewChild': [{ type: ViewChild, args: ['listelement',] },],
     'templates': [{ type: ContentChildren, args: [PrimeTemplate,] },],
+    'value': [{ type: Input },],
 };
 var OrderListModule = (function () {
     function OrderListModule() {

@@ -34,13 +34,7 @@ var PrimeTemplate = (function () {
         this.template = template;
     }
     PrimeTemplate.prototype.getType = function () {
-        if (this.type) {
-            console.log('Defining a pTemplate with type property is deprecated use pTemplate="type" instead.');
-            return this.type;
-        }
-        else {
-            return this.name;
-        }
+        return this.name;
     };
     return PrimeTemplate;
 }());
@@ -148,6 +142,7 @@ Column.propDecorators = {
     'expander': [{ type: Input },],
     'selectionMode': [{ type: Input },],
     'filterPlaceholder': [{ type: Input },],
+    'filterMaxlength': [{ type: Input },],
     'frozen': [{ type: Input },],
     'sortFunction': [{ type: Output },],
     'templates': [{ type: ContentChildren, args: [PrimeTemplate,] },],

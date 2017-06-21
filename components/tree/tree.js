@@ -250,7 +250,7 @@ var Tree = (function () {
             this.templateMap = {};
         }
         this.templates.forEach(function (item) {
-            _this.templateMap[item.getType()] = item.template;
+            _this.templateMap[item.name] = item.template;
         });
     };
     Tree.prototype.onNodeClick = function (event, node) {

@@ -15,6 +15,27 @@ var Accordion = (function () {
     Accordion.prototype.getBlockableElement = function () {
         return this.el.nativeElement.children[0];
     };
+    Object.defineProperty(Accordion.prototype, "activeIndex", {
+        get: function () {
+            return this._activeIndex;
+        },
+        set: function (val) {
+            this._activeIndex = val;
+            if (this.tabs && this.tabs.length && this._activeIndex != null) {
+                for (var i = 0; i < this.tabs.length; i++) {
+                    var selected = this.multiple ? this._activeIndex.includes(i) : (i === this._activeIndex);
+                    var changed = selected !== this.tabs[i].selected;
+                    if (changed) {
+                        this.tabs[i].animating = true;
+                    }
+                    this.tabs[i].selected = selected;
+                    this.tabs[i].selectedChange.emit(selected);
+                }
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
     return Accordion;
 }());
 export { Accordion };
@@ -35,6 +56,7 @@ Accordion.propDecorators = {
     'style': [{ type: Input },],
     'styleClass': [{ type: Input },],
     'lazy': [{ type: Input },],
+    'activeIndex': [{ type: Input },],
 };
 var AccordionTab = (function () {
     function AccordionTab(accordion) {

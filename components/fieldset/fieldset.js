@@ -10,8 +10,10 @@ var Fieldset = (function () {
         this.onAfterToggle = new EventEmitter();
     }
     Fieldset.prototype.toggle = function (event) {
-        var _this = this;
         if (this.toggleable) {
+            if (this.animating) {
+                return false;
+            }
             this.animating = true;
             this.onBeforeToggle.emit({ originalEvent: event, collapsed: this.collapsed });
             if (this.collapsed)
@@ -19,10 +21,6 @@ var Fieldset = (function () {
             else
                 this.collapse(event);
             this.onAfterToggle.emit({ originalEvent: event, collapsed: this.collapsed });
-            //TODO: Use onDone of animate callback instead with RC6
-            setTimeout(function () {
-                _this.animating = false;
-            }, 400);
         }
     };
     Fieldset.prototype.expand = function (event) {
@@ -34,13 +32,16 @@ var Fieldset = (function () {
     Fieldset.prototype.getBlockableElement = function () {
         return this.el.nativeElement.children[0];
     };
+    Fieldset.prototype.onToggleDone = function (event) {
+        this.animating = false;
+    };
     return Fieldset;
 }());
 export { Fieldset };
 Fieldset.decorators = [
     { type: Component, args: [{
                 selector: 'p-fieldset',
-                template: "\n        <fieldset [ngClass]=\"{'ui-fieldset ui-widget ui-widget-content ui-corner-all': true, 'ui-fieldset-toggleable': toggleable}\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <legend class=\"ui-fieldset-legend ui-corner-all ui-state-default ui-unselectable-text\" (click)=\"toggle($event)\">\n                <span *ngIf=\"toggleable\" class=\"ui-fieldset-toggler fa fa-w\" [ngClass]=\"{'fa-minus': !collapsed,'fa-plus':collapsed}\"></span>\n                {{legend}}\n                <ng-content select=\"p-header\"></ng-content>\n            </legend>\n            <div class=\"ui-fieldset-content-wrapper\" [@fieldsetContent]=\"collapsed ? 'hidden' : 'visible'\" \n                        [ngClass]=\"{'ui-fieldset-content-wrapper-overflown': collapsed||animating}\">\n                <div class=\"ui-fieldset-content\">\n                    <ng-content></ng-content>\n                </div>\n            </div>\n        </fieldset>\n    ",
+                template: "\n        <fieldset [ngClass]=\"{'ui-fieldset ui-widget ui-widget-content ui-corner-all': true, 'ui-fieldset-toggleable': toggleable}\" [ngStyle]=\"style\" [class]=\"styleClass\">\n            <legend class=\"ui-fieldset-legend ui-corner-all ui-state-default ui-unselectable-text\" (click)=\"toggle($event)\">\n                <span *ngIf=\"toggleable\" class=\"ui-fieldset-toggler fa fa-w\" [ngClass]=\"{'fa-minus': !collapsed,'fa-plus':collapsed}\"></span>\n                {{legend}}\n                <ng-content select=\"p-header\"></ng-content>\n            </legend>\n            <div class=\"ui-fieldset-content-wrapper\" [@fieldsetContent]=\"collapsed ? 'hidden' : 'visible'\" \n                        [ngClass]=\"{'ui-fieldset-content-wrapper-overflown': collapsed||animating}\"\n                         (@fieldsetContent.done)=\"onToggleDone($event)\">\n                <div class=\"ui-fieldset-content\">\n                    <ng-content></ng-content>\n                </div>\n            </div>\n        </fieldset>\n    ",
                 animations: [
                     trigger('fieldsetContent', [
                         state('hidden', style({
