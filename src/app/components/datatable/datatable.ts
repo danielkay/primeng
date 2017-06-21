@@ -9,7 +9,7 @@ import {LazyLoadEvent} from '../common/lazyloadevent';
 import {FilterMetadata} from '../common/filtermetadata';
 import {SortMeta} from '../common/sortmeta';
 import {DomHandler} from '../dom/domhandler';
-import {ObjectUtils} from '../utils/ObjectUtils';
+import {ObjectUtils} from '../utils/objectutils';
 import {Subscription} from 'rxjs/Subscription';
 import {BlockableUI} from '../common/blockableui';
 
@@ -83,11 +83,14 @@ export class RowExpansionLoader {
     
     @Input() rowData: any;
     
+    @Input() rowIndex: any;
+    
     constructor(public viewContainer: ViewContainerRef) {}
     
     ngOnInit() {
         let view = this.viewContainer.createEmbeddedView(this.template, {
-            '\$implicit': this.rowData
+            '\$implicit': this.rowData,
+            'rowIndex': this.rowIndex
         });
     }
 }
@@ -107,7 +110,7 @@ export class RowExpansionLoader {
                 </span>
                 <span class="ui-sortable-column-icon fa fa-fw fa-sort" *ngIf="col.sortable"
                      [ngClass]="{'fa-sort-desc': (dt.getSortOrder(col) == -1),'fa-sort-asc': (dt.getSortOrder(col) == 1)}"></span>
-                <input [attr.type]="col.filterType" class="ui-column-filter ui-inputtext ui-widget ui-state-default ui-corner-all" [attr.placeholder]="col.filterPlaceholder" *ngIf="col.filter&&!col.filterTemplate" [value]="dt.filters[col.field] ? dt.filters[col.field].value : ''" 
+                <input [attr.type]="col.filterType" class="ui-column-filter ui-inputtext ui-widget ui-state-default ui-corner-all" [attr.maxlength]="col.filterMaxlength" [attr.placeholder]="col.filterPlaceholder" *ngIf="col.filter&&!col.filterTemplate" [value]="dt.filters[col.field] ? dt.filters[col.field].value : ''" 
                     (click)="dt.onFilterInputClick($event)" (keyup)="dt.onFilterKeyup($event.target.value, col.field, col.filterMatchMode)"/>
                 <p-columnFilterTemplateLoader [column]="col" *ngIf="col.filterTemplate"></p-columnFilterTemplateLoader>
                 <p-dtCheckbox *ngIf="col.selectionMode=='multiple'" (onChange)="dt.toggleRowsWithCheckbox($event)" [checked]="dt.allSelected" [disabled]="dt.isEmpty()"></p-dtCheckbox>
@@ -165,7 +168,7 @@ export class ColumnFooters {
                     <td #cell *ngIf="!dt.rowGroupMode || (dt.rowGroupMode == 'subheader') ||
                         (dt.rowGroupMode=='rowspan' && ((dt.sortField==col.field && dt.rowGroupMetadata[dt.resolveFieldData(rowData,dt.sortField)].index == rowIndex) || (dt.sortField!=col.field)))"
                         [ngStyle]="col.style" [class]="col.styleClass" [style.display]="col.hidden ? 'none' : 'table-cell'"
-                        [ngClass]="{'ui-editable-column':col.editable,'ui-selection-column':col.selectionMode}" (click)="dt.switchCellToEditMode(cell,col,rowData)"
+                        [ngClass]="{'ui-editable-column':col.editable,'ui-selection-column':col.selectionMode}"
                         [attr.rowspan]="(dt.rowGroupMode=='rowspan' && dt.sortField == col.field && dt.rowGroupMetadata[dt.resolveFieldData(rowData,dt.sortField)].index == rowIndex) ? dt.rowGroupMetadata[dt.resolveFieldData(rowData,dt.sortField)].size : null">
                         <span class="ui-column-title" *ngIf="dt.responsive">{{col.header}}</span>
                         <span class="ui-cell-data" *ngIf="!col.bodyTemplate && !col.expander && !col.selectionMode">{{dt.resolveFieldData(rowData,col.field)}}</span>
@@ -192,7 +195,7 @@ export class ColumnFooters {
             </tr>
             <tr *ngIf="dt.expandableRows && dt.isRowExpanded(rowData)">
                 <td [attr.colspan]="dt.visibleColumns().length">
-                    <p-rowExpansionLoader [rowData]="rowData" [template]="dt.rowExpansionTemplate"></p-rowExpansionLoader>
+                    <p-rowExpansionLoader [rowData]="rowData" [rowIndex]="rowIndex" [template]="dt.rowExpansionTemplate"></p-rowExpansionLoader>
                 </td>
             </tr>
         </ng-template>
@@ -429,7 +432,7 @@ export class ScrollableView implements AfterViewInit,AfterViewChecked,OnDestroy 
                 <ng-content select="p-header"></ng-content>
             </div>
             <p-paginator [rows]="rows" [first]="first" [totalRecords]="totalRecords" [pageLinkSize]="pageLinks" styleClass="ui-paginator-bottom" [alwaysShow]="alwaysShowPaginator"
-                (onPageChange)="paginate($event)" [rowsPerPageOptions]="rowsPerPageOptions" *ngIf="paginator && paginatorPosition!='bottom' || paginatorPosition =='both'"></p-paginator>
+                (onPageChange)="onPageChange($event)" [rowsPerPageOptions]="rowsPerPageOptions" *ngIf="paginator && paginatorPosition!='bottom' || paginatorPosition =='both'" styleClass="ui-paginator-top"></p-paginator>
             <div class="ui-datatable-tablewrapper" *ngIf="!scrollable">
                 <table [class]="tableStyleClass" [ngStyle]="tableStyle">
                     <thead class="ui-datatable-thead">
@@ -459,7 +462,7 @@ export class ScrollableView implements AfterViewInit,AfterViewChecked,OnDestroy 
             </ng-template>
             
             <p-paginator [rows]="rows" [first]="first" [totalRecords]="totalRecords" [pageLinkSize]="pageLinks" styleClass="ui-paginator-bottom" [alwaysShow]="alwaysShowPaginator"
-                (onPageChange)="paginate($event)" [rowsPerPageOptions]="rowsPerPageOptions" *ngIf="paginator && paginatorPosition!='top' || paginatorPosition =='both'"></p-paginator>
+                (onPageChange)="onPageChange($event)" [rowsPerPageOptions]="rowsPerPageOptions" *ngIf="paginator && paginatorPosition!='top' || paginatorPosition =='both'" styleClass="ui-paginator-bottom"></p-paginator>
             <div class="ui-datatable-footer ui-widget-header" *ngIf="footer">
                 <ng-content select="p-footer"></ng-content>
             </div>
@@ -488,8 +491,6 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     @Input() stacked: boolean;
 
     @Input() selectionMode: string;
-
-    @Input() selection: any;
 
     @Output() selectionChange: EventEmitter<any> = new EventEmitter();
 
@@ -572,6 +573,8 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     @Input() metaKeySelection: boolean = true;
     
     @Input() rowTrackBy: Function = (index: number, item: any) => item;
+    
+    @Input() compareSelectionBy: string = 'deepEquals';
                 
     @Output() onEditInit: EventEmitter<any> = new EventEmitter();
 
@@ -613,13 +616,13 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
 
     @Input() rowHover: boolean;
     
-    @Input() first: number = 0;
-    
     @Input() public filters: {[s: string]: FilterMetadata;} = {};
     
     @Input() dataKey: string;
     
     @Input() loading: boolean;
+    
+    @Output() firstChange: EventEmitter<number> = new EventEmitter<number>();
         
     @Output() onRowExpand: EventEmitter<any> = new EventEmitter();
     
@@ -686,9 +689,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     public rowGroupToggleClick: boolean;
     
     public editingCell: any;
-    
-    public stopFilterPropagation: boolean;
-    
+        
     public rowGroupMetadata: any;
     
     public rowGroupHeaderTemplate: TemplateRef<any>;
@@ -700,6 +701,14 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     public scrollBarWidth: number;
     
     public editorClick: boolean;
+    
+    public _first: number = 0;
+    
+    public selectionKeys: any;
+    
+    public preventSelectionKeysPropagation: any;
+    
+    _selection: any;
         
     globalFilterFunction: any;
     
@@ -781,6 +790,38 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     set value(val:any[]) {
         this._value = val ? [...val] : null;
         this.handleDataChange();
+    }
+    
+    @Input() get first(): number {
+        return this._first;
+    }
+
+    set first(val:number) {
+        let shouldPaginate = this._first !== val;
+        
+        this._first = val;
+        
+        if(shouldPaginate) {
+            this.paginate();
+        }
+    }
+    
+    @Input() get selection(): any {
+        return this._selection;
+    }
+
+    set selection(val: any) {
+        this._selection = val;
+        
+        if(this.dataKey && !this.preventSelectionKeysPropagation) {
+            this.selectionKeys = {};
+            if(this._selection) {
+                for(let data of this._selection) {
+                    this.selectionKeys[String(this.objectUtils.resolveFieldData(data, this.dataKey))] = 1;
+                }
+            }
+        }
+        this.preventSelectionKeysPropagation = false;
     }
     
     handleDataChange() {
@@ -879,22 +920,23 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
         //first
         if(this.totalRecords && this.first >= this.totalRecords) {
             let numberOfPages = Math.ceil(this.totalRecords/this.rows);
-            this.first = Math.max((numberOfPages-1) * this.rows, 0);
+            this._first = Math.max((numberOfPages-1) * this.rows, 0);
         }
     }
 
-    paginate(event) {
-        this.first = event.first;
+    onPageChange(event) {
+        this._first = event.first;
+        this.firstChange.emit(this.first);
         this.rows = event.rows;
-
-        if(this.lazy) {
-            this.stopFilterPropagation = true;
+        this.paginate();
+    }
+    
+    paginate() {
+        if(this.lazy)
             this.onLazyLoad.emit(this.createLazyLoadMetadata());
-        }            
-        else {
+        else
             this.updateDataToRender(this.filteredValue||this.value);
-        }
-
+        
         this.onPage.emit({
             first: this.first,
             rows: this.rows
@@ -925,15 +967,12 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     }
         
     onVirtualScroll(event) {
-        this.first = (event.page - 1) * this.rows;
+        this._first = (event.page - 1) * this.rows;
         
-        if(this.lazy) {
-            this.stopFilterPropagation = true;
+        if(this.lazy)
             this.onLazyLoad.emit(this.createLazyLoadMetadata());
-        }            
-        else {
+        else
             this.updateDataToRender(this.filteredValue||this.value);
-        }
     }
     
     onHeaderKeydown(event, column: Column) {
@@ -975,8 +1014,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
             }
 
             if(this.lazy) {
-                this.first = 0;
-                this.stopFilterPropagation = true;
+                this._first = 0;
                 this.onLazyLoad.emit(this.createLazyLoadMetadata());
             }
             else {
@@ -1148,8 +1186,17 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
         }
     }
     
-    handleRowClick(event, rowData) {        
+    handleRowClick(event, rowData) {     
         let targetNode = event.target.nodeName;
+        if(this.editable) {
+            let cell = this.findCell(event.target);
+            let column = this.columns[this.domHandler.index(cell)];
+            if(column.editable) {
+                this.switchCellToEditMode(cell, column, rowData);
+                return;
+            }
+        }
+        
         if(targetNode == 'TD' || (targetNode == 'SPAN' && !this.domHandler.hasClass(event.target, 'ui-c'))) {
             this.onRowClick.next({originalEvent: event, data: rowData});
             
@@ -1159,36 +1206,51 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
             
             let selected = this.isSelected(rowData);
             let metaSelection = this.rowTouched ? false : this.metaKeySelection;
+            let dataKeyValue: string = this.dataKey ? String(this.resolveFieldData(rowData, this.dataKey)) : null;
             
             if(metaSelection) {
                 let metaKey = event.metaKey||event.ctrlKey;
                 
                 if(selected && metaKey) {
                     if(this.isSingleSelectionMode()) {
-                        this.selection = null;
+                        this._selection = null;
+                        this.selectionKeys = {};
                         this.selectionChange.emit(null);
                     }
                     else {
                         let selectionIndex = this.findIndexInSelection(rowData);
-                        this.selection = this.selection.filter((val,i) => i!=selectionIndex);
+                        this._selection = this.selection.filter((val,i) => i!=selectionIndex);
                         this.selectionChange.emit(this.selection);
+                        if(dataKeyValue) {
+                            delete this.selectionKeys[dataKeyValue];
+                        }
                     }
                     
                     this.onRowUnselect.emit({originalEvent: event, data: rowData, type: 'row'});
                 }
                 else {
                     if(this.isSingleSelectionMode()) {
-                        this.selection = rowData;
+                        this._selection = rowData;
                         this.selectionChange.emit(rowData);
+                        if(dataKeyValue) {
+                            this.selectionKeys = {};
+                            this.selectionKeys[dataKeyValue] = 1;
+                        }
                     }
                     else if(this.isMultipleSelectionMode()) {
-                        if(metaKey)
-                            this.selection = this.selection||[];
-                        else 
-                            this.selection = [];
-                        
-                        this.selection = [...this.selection,rowData];
+                        if(metaKey) {
+                            this._selection = this.selection||[];
+                        }
+                        else {
+                            this._selection = [];
+                            this.selectionKeys = {};
+                        }
+
+                        this._selection = [...this.selection,rowData];
                         this.selectionChange.emit(this.selection);
+                        if(dataKeyValue) {
+                            this.selectionKeys[dataKeyValue] = 1;
+                        }
                     }
 
                     this.onRowSelect.emit({originalEvent: event, data: rowData, type: 'row'});
@@ -1197,60 +1259,86 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
             else {
                 if(this.isSingleSelectionMode()) {
                     if(selected) {
-                        this.selection = null;
+                        this._selection = null;
+                        this.selectionKeys = {};
                         this.onRowUnselect.emit({originalEvent: event, data: rowData, type: 'row'});
                     }
                     else {
-                        this.selection = rowData;
+                        this._selection = rowData;
                         this.onRowSelect.emit({originalEvent: event, data: rowData, type: 'row'});
+                        if(dataKeyValue) {
+                            this.selectionKeys = {};
+                            this.selectionKeys[dataKeyValue] = 1;
+                        }
                     }
                 }
                 else {
                     if(selected) {
                         let selectionIndex = this.findIndexInSelection(rowData);
-                        this.selection = this.selection.filter((val,i) => i!=selectionIndex);
+                        this._selection = this.selection.filter((val,i) => i!=selectionIndex);
                         this.onRowUnselect.emit({originalEvent: event, data: rowData, type: 'row'});
+                        if(dataKeyValue) {
+                            delete this.selectionKeys[dataKeyValue];
+                        }
                     }
                     else {
-                        this.selection = [...this.selection||[],rowData];
+                        this._selection = [...this.selection||[],rowData];
                         this.onRowSelect.emit({originalEvent: event, data: rowData, type: 'row'});
+                        if(dataKeyValue) {
+                            this.selectionKeys[dataKeyValue] = 1;
+                        }
                     }
                 }
                 
                 this.selectionChange.emit(this.selection);
             }
         }
-        
+
         this.rowTouched = false;
+        this.preventSelectionKeysPropagation = true;
     }
 
-    handleRowTouchEnd(event) {
+    handleRowTouchEnd(event: Event) {
         this.rowTouched = true;
     }
     
-    selectRowWithRadio(event, rowData:any) {
+    selectRowWithRadio(event: Event, rowData:any) {
         if(this.selection != rowData) {
-            this.selection = rowData;
+            this._selection = rowData;
             this.selectionChange.emit(this.selection);
             this.onRowSelect.emit({originalEvent: event, data: rowData, type: 'radiobutton'});
+            
+            if(this.dataKey) {
+                this.selectionKeys = {};
+                this.selectionKeys[String(this.resolveFieldData(rowData, this.dataKey))] = 1;
+            }
         }
+        
+        this.preventSelectionKeysPropagation = true;
     }
     
-    toggleRowWithCheckbox(event,rowData) {
+    toggleRowWithCheckbox(event, rowData: any) {
         let selectionIndex = this.findIndexInSelection(rowData);
         this.selection = this.selection||[];
+        let dataKeyValue: string = this.dataKey ? String(this.resolveFieldData(rowData, this.dataKey)) : null;
         
         if(selectionIndex != -1) {
-            this.selection = this.selection.filter((val,i) => i!=selectionIndex);
+            this._selection = this.selection.filter((val,i) => i!=selectionIndex);
             this.onRowUnselect.emit({originalEvent: event, data: rowData, type: 'checkbox'});
+            if(dataKeyValue) {
+                delete this.selectionKeys[dataKeyValue];
+            }
         }
-            
         else {
-            this.selection = [...this.selection,rowData];
+            this._selection = [...this.selection,rowData];
             this.onRowSelect.emit({originalEvent: event, data: rowData, type: 'checkbox'});
+            if(dataKeyValue) {
+                this.selectionKeys[dataKeyValue] = 1;
+            }
         }
                  
         this.selectionChange.emit(this.selection);
+        this.preventSelectionKeysPropagation = true;
     }
     
     toggleRowsWithCheckbox(event) {
@@ -1268,6 +1356,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
         if(this.contextMenu) {
             let selectionIndex = this.findIndexInSelection(rowData);
             let selected = selectionIndex != -1;
+            let dataKeyValue: string = this.dataKey ? String(this.resolveFieldData(rowData, this.dataKey)) : null;
             
             if(!selected) {
                 if(this.isSingleSelectionMode()) {
@@ -1278,11 +1367,17 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
                     this.selection = [rowData];
                     this.selectionChange.emit(this.selection);
                 }
+                
+                if(this.dataKey) {
+                    this.selectionKeys[String(this.resolveFieldData(rowData, this.dataKey))] = 1;
+                }
             }
 
             this.contextMenu.show(event);            
             this.onContextMenuSelect.emit({originalEvent: event, data: rowData});
         }
+        
+        this.preventSelectionKeysPropagation = true;
     }
 
     rowDblclick(event, rowData) {
@@ -1301,7 +1396,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
         let index: number = -1;
         if(this.selection) {
             for(let i = 0; i  < this.selection.length; i++) {
-                if(this.objectUtils.equals(rowData, this.selection[i], this.dataKey)) {
+                if(this.equals(rowData, this.selection[i])) {
                     index = i;
                     break;
                 }
@@ -1312,7 +1407,23 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     }
 
     isSelected(rowData) {
-        return ((rowData && this.objectUtils.equals(rowData, this.selection, this.dataKey)) || this.findIndexInSelection(rowData) != -1);
+        if(rowData && this.selection) {
+            if(this.dataKey) {
+                return this.selectionKeys[this.objectUtils.resolveFieldData(rowData, this.dataKey)] !== undefined;
+            }
+            else {
+                if(this.selection instanceof Array)
+                    return this.findIndexInSelection(rowData) > -1;
+                else
+                    return this.equals(rowData, this.selection);
+            }
+        }
+        
+        return false;
+    }
+    
+    equals(data1, data2) {
+        return this.compareSelectionBy === 'equals' ? (data1 === data2) : this.objectUtils.equals(data1, data2, this.dataKey);
     }
     
     get allSelected() {
@@ -1367,10 +1478,9 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     }
 
     _filter() {
-        this.first = 0;
+        this._first = 0;
         
         if(this.lazy) {
-            this.stopFilterPropagation = true;
             this.onLazyLoad.emit(this.createLazyLoadMetadata());
         }
         else {
@@ -1694,7 +1804,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
         let containerLeft = this.domHandler.getOffset(container).left;
         this.resizeColumn = event.target.parentElement;
         this.columnResizing = true;
-        this.lastResizerHelperX = (event.pageX - containerLeft);
+        this.lastResizerHelperX = (event.pageX - containerLeft + container.scrollLeft);
     }
     
     onColumnResize(event) {
@@ -1703,9 +1813,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
         this.domHandler.addClass(container, 'ui-unselectable-text');
         this.resizerHelper.style.height = container.offsetHeight + 'px';
         this.resizerHelper.style.top = 0 + 'px';
-        if(event.pageX > containerLeft && event.pageX < (containerLeft + container.offsetWidth)) {
-            this.resizerHelper.style.left = (event.pageX - containerLeft) + 'px';
-        }
+        this.resizerHelper.style.left = (event.pageX - containerLeft + container.scrollLeft) + 'px';
         
         this.resizerHelper.style.display = 'block';
     }
@@ -1745,8 +1853,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
                 let containerWidth = this.tbody.parentElement.style.width;
                 
                 if(this.scrollable) {
-                    this.scrollBarWidth = this.scrollBarWidth||this.domHandler.calculateScrollbarWidth();
-                    this.el.nativeElement.children[0].style.width = parseFloat(containerWidth) + this.scrollBarWidth + 'px';
+                    this.domHandler.findSingle(this.el.nativeElement, '.ui-datatable-scrollable-header-box').children[0].style.width = containerWidth;
                     let colGroup = this.domHandler.findSingle(this.el.nativeElement, 'colgroup.ui-datatable-scrollable-colgroup');
                     let resizeColumnIndex = this.domHandler.index(this.resizeColumn);
                     colGroup.children[resizeColumnIndex].style.width = newColumnWidth + 'px';
@@ -1954,7 +2061,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
     }
     
     findExpandedRowIndex(row: any): number {
-        let index = -1
+        let index = -1;
         if(this.expandedRows) {
             for(let i = 0; i < this.expandedRows.length; i++) {
                 if(this.expandedRows[i] == row) {
@@ -2001,7 +2108,7 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
             });
         }
         else {
-            this.expandedRowsGroups = this.expandedRowsGroups||[],
+            this.expandedRowsGroups = this.expandedRowsGroups || [];
             this.expandedRowsGroups.push(rowGroupField);
             this.onRowGroupExpand.emit({
                 originalEvent: event, 
@@ -2019,13 +2126,11 @@ export class DataTable implements AfterViewChecked,AfterViewInit,AfterContentIni
         this.filters = {};
 
         if(this.paginator) {
-            this.paginate({
-                first: 0,
-                rows: this.rows
-            });
+            this.first = 0;
+            this.firstChange.emit(this.first);
         }
         else {
-            this.updateDataToRender(this.value);
+            this.updateDataToRender(this.value);    
         }
     }
     

@@ -1,4 +1,4 @@
-<div class="content-section">
+<div class="content-section introduction">
     <div>
         <span class="feature-title">Slide Menu</span>
         <span>SlideMenu displays submenus with slide animation.</span>
@@ -14,7 +14,7 @@
     <button #btn type="button" pButton icon="fa fa-list" label="Show" (click)="menu.toggle($event)"></button>
 </div>
 
-<div class="content-section source">
+<div class="content-section documentation">
     <p-tabView effect="fade">
         <p-tabPanel header="Documentation">
             <h3>Import</h3>
@@ -39,7 +39,7 @@ import &#123;SlideMenuModule,MenuItem&#125; from 'primeng/primeng';
 <code class="language-typescript" pCode ngNonBindable>
 export class SlideMenuDemo &#123;
 
-    private items: MenuItem[];
+    items: MenuItem[];
 
     ngOnInit() &#123;
         this.items = [
@@ -136,7 +136,7 @@ export class SlideMenuDemo &#123;
                         <tr>
                             <td>effectDuration</td>
                             <td>any</td>
-                            <td>500</td>
+                            <td>250</td>
                             <td>Duration of the sliding animation in milliseconds.</td>
                         </tr>
                         <tr>
@@ -247,6 +247,10 @@ export class SlideMenuDemo &#123;
         </p-tabPanel>
 
         <p-tabPanel header="Source">
+            <a href="https://github.com/primefaces/primeng/tree/master/src/app/showcase/components/slidemenu" class="btn-viewsource" target="_blank">
+                <i class="fa fa-github"></i>
+                <span>View on GitHub</span>
+            </a>
 <pre>
 <code class="language-markup" pCode ngNonBindable>
 &lt;h3 class="first"&gt;Default&lt;/h3&gt;
@@ -262,7 +266,7 @@ export class SlideMenuDemo &#123;
 <code class="language-typescript" pCode ngNonBindable>
 export class SlideMenuDemo &#123;
 
-    private items: MenuItem[];
+    items: MenuItem[];
 
     ngOnInit() &#123;
         this.items = [
@@ -278,6 +282,7 @@ export class SlideMenuDemo &#123;
                         ]
                     &#125;,
                     &#123;label: 'Open'&#125;,
+                    &#123;separator:true&#125;,
                     &#123;label: 'Quit'&#125;
                 ]
             &#125;,
@@ -335,6 +340,7 @@ export class SlideMenuDemo &#123;
                     &#125;
                 ]
             &#125;,
+            &#123;separator:true&#125;,
             &#123;
                 label: 'Quit', icon: 'fa-minus'
             &#125;

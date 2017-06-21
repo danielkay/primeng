@@ -1,8 +1,8 @@
 <datatable-demos></datatable-demos>
 
-<div class="content-section">
+<div class="content-section introduction">
     <div>
-        <span class="feature-title">DataTable - <span class="subitem">Paginator</span></span>
+        <span class="feature-title">DataTable - Paginator</span>
         <span>Pagination is enabled by setting paginator property to true, rows attribute defines the number of rows per page and pageLinks specify the the number
             of page links to display.</span>
     </div>
@@ -18,9 +18,13 @@
     </p-dataTable>
 </div>
 
-<div class="content-section source">
+<div class="content-section documentation">
     <p-tabView effect="fade">
         <p-tabPanel header="datatablepaginatordemo.ts">
+            <a href="https://github.com/primefaces/primeng/tree/master/src/app/showcase/components/datatable/datatablepaginatordemo.ts" class="btn-viewsource" target="_blank">
+                <i class="fa fa-github"></i>
+                <span>View on GitHub</span>
+            </a>
 <pre>
 <code class="language-typescript" pCode ngNonBindable>
 export class DataTablePaginatorDemo implements OnInit &#123;
@@ -38,6 +42,10 @@ export class DataTablePaginatorDemo implements OnInit &#123;
         </p-tabPanel>
 
         <p-tabPanel header="datatablepaginatordemo.html">
+            <a href="https://github.com/primefaces/primeng/tree/master/src/app/showcase/components/datatable/datatablepaginatordemo.html" class="btn-viewsource" target="_blank">
+                <i class="fa fa-github"></i>
+                <span>View on GitHub</span>
+            </a>
 <pre>
 <code class="language-markup" pCode ngNonBindable>
 &lt;p-dataTable [value]="cars" [rows]="10" [paginator]="true" [pageLinks]="3" [rowsPerPageOptions]="[5,10,20]"&gt;

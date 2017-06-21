@@ -1,11 +1,11 @@
-<div class="content-section">
+<div class="content-section introduction">
     <div>
         <span class="feature-title">MenuModel API</span>
         <span>PrimeNG menus components share a common api to specify the menuitems and submenus.</span>
     </div>
 </div>
 
-<div class="content-section source">
+<div class="content-section documentation">
     <h3 class="first">MenuItem</h3>
     <p>Core of the api is MenuItem class that defines various options such as the label, icon and children of an item in a menu. Example below
     is a sample configuration with Menu component.</p>
@@ -126,6 +126,12 @@ export class MenuDemo &#123;
                     <td>null</td>
                     <td>Specifies where to open the linked document.</td>
                 </tr>
+                <tr>
+                    <td>separator</td>
+                    <td>boolean</td>
+                    <td>false</td>
+                    <td>Defines the item as a separator.</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -142,7 +148,7 @@ export class MenuDemo &#123;
         this.items = [&#123;
             label: 'File',
             items: [
-                &#123;label: 'New', icon: 'fa-plus': command: (event) => &#123;
+                &#123;label: 'New', icon: 'fa-plus', command: (event) => &#123;
                     //event.originalEvent: Browser event
                     //event.item: menuitem metadata
                 }}

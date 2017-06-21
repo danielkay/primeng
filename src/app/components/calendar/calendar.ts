@@ -228,6 +228,8 @@ export class Calendar implements AfterViewInit,AfterViewChecked,OnInit,OnDestroy
     
     @Output() onBlur: EventEmitter<any> = new EventEmitter();
     
+    @Output() onClose: EventEmitter<any> = new EventEmitter();
+    
     @Output() onSelect: EventEmitter<any> = new EventEmitter();
     
     @Output() onInput: EventEmitter<any> = new EventEmitter();
@@ -714,7 +716,7 @@ export class Calendar implements AfterViewInit,AfterViewChecked,OnInit,OnDestroy
     onButtonClick(event,inputfield) {
         this.closeOverlay = false;
         
-        if(!this.overlay.offsetParent) {
+        if(!this.overlay.offsetParent || this.overlay.style.display === 'none') {
             inputfield.focus();
             this.showOverlay();
         }
@@ -1246,6 +1248,7 @@ export class Calendar implements AfterViewInit,AfterViewChecked,OnInit,OnDestroy
             this.documentClickListener = this.renderer.listen('document', 'click', () => {
                 if(this.closeOverlay) {
                     this.overlayVisible = false;
+                    this.onClose.emit(event);
                 }
                 
                 this.closeOverlay = true;

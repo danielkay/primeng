@@ -6,7 +6,7 @@ import {MenuItem} from '../../../components/common/api';
 })
 export class MenubarDemo {
 
-    private items: MenuItem[];
+    items: MenuItem[];
 
     ngOnInit() {
         this.items = [
@@ -22,6 +22,7 @@ export class MenubarDemo {
                         ]
                     },
                     {label: 'Open'},
+                    {separator: true},
                     {label: 'Quit'}
                 ]
             },

@@ -6,7 +6,7 @@ import {MenuItem} from '../../../components/common/api';
 })
 export class TieredMenuDemo {
 
-    private items: MenuItem[];
+    items: MenuItem[];
 
     ngOnInit() {
         this.items = [
@@ -22,6 +22,7 @@ export class TieredMenuDemo {
                         ]
                     },
                     {label: 'Open'},
+                    {separator:true},
                     {label: 'Quit'}
                 ]
             },
@@ -79,6 +80,7 @@ export class TieredMenuDemo {
                     }
                 ]
             },
+            {separator:true},
             {
                 label: 'Quit', icon: 'fa-minus'
             }

@@ -11,7 +11,8 @@ import {RouterModule} from '@angular/router';
         <ul [ngClass]="{'ui-menubar-root-list ui-helper-clearfix':root, 'ui-widget-content ui-corner-all ui-helper-clearfix ui-menu-child ui-shadow':!root}" class="ui-menu-list"
             (click)="listClick($event)">
             <ng-template ngFor let-child [ngForOf]="(root ? item : item.items)">
-                <li #listItem [ngClass]="{'ui-menuitem ui-widget ui-corner-all':true,'ui-menu-parent':child.items,'ui-menuitem-active':listItem==activeItem}"
+                <li *ngIf="child.separator" class="ui-menu-separator ui-widget-content">
+                <li *ngIf="!child.separator" #listItem [ngClass]="{'ui-menuitem ui-widget ui-corner-all':true,'ui-menu-parent':child.items,'ui-menuitem-active':listItem==activeItem}"
                     (mouseenter)="onItemMouseEnter($event,listItem,child)" (mouseleave)="onItemMouseLeave($event)">
                     <a *ngIf="!child.routerLink" [href]="child.url||'#'" class="ui-menuitem-link ui-corner-all" [attr.target]="child.target"
                         [ngClass]="{'ui-state-disabled':child.disabled}" (click)="itemClick($event, child)">
@@ -28,6 +29,9 @@ import {RouterModule} from '@angular/router';
                     <p-menubarSub class="ui-submenu" [item]="child" *ngIf="child.items"></p-menubarSub>
                 </li>
             </ng-template>
+            <li class="ui-menuitem ui-menuitem-custom ui-widget ui-corner-all">
+                <ng-content></ng-content>
+            </li>
         </ul>
     `,
     providers: [DomHandler]
@@ -104,7 +108,9 @@ export class MenubarSub {
     template: `
         <div [ngClass]="{'ui-menubar ui-menu ui-widget ui-widget-content ui-corner-all ui-helper-clearfix':true}" 
             [class]="styleClass" [ngStyle]="style">
-            <p-menubarSub [item]="model" root="root"></p-menubarSub>
+            <p-menubarSub [item]="model" root="root">
+                <ng-content></ng-content>
+            </p-menubarSub>
         </div>
     `,
     providers: [DomHandler]

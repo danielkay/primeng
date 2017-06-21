@@ -1,4 +1,4 @@
-<div class="content-section">
+<div class="content-section introduction">
     <div>
         <span class="feature-title">Lightbox</span>
         <span>LightBox is a modal overlay component to display images, videos, inline html content and iframes.</span>
@@ -18,7 +18,7 @@
     </p-lightbox>
 </div>
 
-<div class="content-section source">
+<div class="content-section documentation">
     <p-tabView effect="fade">
         <p-tabPanel header="Documentation">
             <h3>Import</h3>
@@ -45,10 +45,10 @@ export class LightboxDemo &#123;
 
     constructor() &#123;
         this.images = [];
-        this.images.push(&#123;source:'showcase/resources/demo/images/sopranos/sopranos1.jpg', thumbnail: 'showcase/resources/demo/images/sopranos/sopranos1_small.jpg', title:'Sopranos 1'&#125;);
-        this.images.push(&#123;source:'showcase/resources/demo/images/sopranos/sopranos2.jpg', thumbnail: 'showcase/resources/demo/images/sopranos/sopranos2_small.jpg', title:'Sopranos 2'&#125;);
-        this.images.push(&#123;source:'showcase/resources/demo/images/sopranos/sopranos3.jpg', thumbnail: 'showcase/resources/demo/images/sopranos/sopranos3_small.jpg', title:'Sopranos 3'&#125;);
-        this.images.push(&#123;source:'showcase/resources/demo/images/sopranos/sopranos4.jpg', thumbnail: 'showcase/resources/demo/images/sopranos/sopranos4_small.jpg', title:'Sopranos 4'&#125;);
+        this.images.push(&#123;source:'assets/showcase/images/demo/sopranos/sopranos1.jpg', thumbnail: 'assets/showcase/images/demo/sopranos/sopranos1_small.jpg', title:'Sopranos 1'&#125;);
+        this.images.push(&#123;source:'assets/showcase/images/demo/sopranos/sopranos2.jpg', thumbnail: 'assets/showcase/images/demo/sopranos/sopranos2_small.jpg', title:'Sopranos 2'&#125;);
+        this.images.push(&#123;source:'assets/showcase/images/demo/sopranos/sopranos3.jpg', thumbnail: 'assets/showcase/images/demo/sopranos/sopranos3_small.jpg', title:'Sopranos 3'&#125;);
+        this.images.push(&#123;source:'assets/showcase/images/demo/sopranos/sopranos4.jpg', thumbnail: 'assets/showcase/images/demo/sopranos/sopranos4_small.jpg', title:'Sopranos 4'&#125;);
     &#125;
 &#125;
 </code>
@@ -175,6 +175,10 @@ export class LightboxDemo &#123;
         </p-tabPanel>
 
         <p-tabPanel header="Source">
+            <a href="https://github.com/primefaces/primeng/tree/master/src/app/showcase/components/lightbox" class="btn-viewsource" target="_blank">
+                <i class="fa fa-github"></i>
+                <span>View on GitHub</span>
+            </a>
 <pre>
 <code class="language-markup" pCode ngNonBindable>
 &lt;h3 class="first"&gt;Basic&lt;/h3&gt;
@@ -198,10 +202,10 @@ export class LightboxDemo &#123;
 
     constructor() &#123;
         this.images = [];
-        this.images.push(&#123;source:'showcase/resources/demo/images/sopranos/sopranos1.jpg', thumbnail: 'showcase/resources/demo/images/sopranos/sopranos1_small.jpg', title:'Sopranos 1'&#125;);
-        this.images.push(&#123;source:'showcase/resources/demo/images/sopranos/sopranos2.jpg', thumbnail: 'showcase/resources/demo/images/sopranos/sopranos2_small.jpg', title:'Sopranos 2'&#125;);
-        this.images.push(&#123;source:'showcase/resources/demo/images/sopranos/sopranos3.jpg', thumbnail: 'showcase/resources/demo/images/sopranos/sopranos3_small.jpg', title:'Sopranos 3'&#125;);
-        this.images.push(&#123;source:'showcase/resources/demo/images/sopranos/sopranos4.jpg', thumbnail: 'showcase/resources/demo/images/sopranos/sopranos4_small.jpg', title:'Sopranos 4'&#125;);
+        this.images.push(&#123;source:'assets/showcase/images/demo/sopranos/sopranos1.jpg', thumbnail: 'assets/showcase/images/demo/sopranos/sopranos1_small.jpg', title:'Sopranos 1'&#125;);
+        this.images.push(&#123;source:'assets/showcase/images/demo/sopranos/sopranos2.jpg', thumbnail: 'assets/showcase/images/demo/sopranos/sopranos2_small.jpg', title:'Sopranos 2'&#125;);
+        this.images.push(&#123;source:'assets/showcase/images/demo/sopranos/sopranos3.jpg', thumbnail: 'assets/showcase/images/demo/sopranos/sopranos3_small.jpg', title:'Sopranos 3'&#125;);
+        this.images.push(&#123;source:'assets/showcase/images/demo/sopranos/sopranos4.jpg', thumbnail: 'assets/showcase/images/demo/sopranos/sopranos4_small.jpg', title:'Sopranos 4'&#125;);
     &#125;
 &#125;
 </code>

@@ -14,12 +14,14 @@ export class ConfirmDialogDemo {
 
     confirm1() {
         this.confirmationService.confirm({
-            message: 'Are you sure that you want to perform this action?',
+            message: 'Are you sure that you want to proceed?',
             header: 'Confirmation',
             icon: 'fa fa-question-circle',
             accept: () => {
-                this.msgs = [];
-                this.msgs.push({severity:'info', summary:'Confirmed', detail:'You have accepted'});
+                this.msgs = [{severity:'info', summary:'Confirmed', detail:'You have accepted'}];
+            },
+            reject: () => {
+                this.msgs = [{severity:'info', summary:'Rejected', detail:'You have rejected'}];
             }
         });
     }
@@ -30,8 +32,10 @@ export class ConfirmDialogDemo {
             header: 'Delete Confirmation',
             icon: 'fa fa-trash',
             accept: () => {
-                this.msgs = [];
-                this.msgs.push({severity:'info', summary:'Confirmed', detail:'Record deleted'});
+                this.msgs = [{severity:'info', summary:'Confirmed', detail:'Record deleted'}];
+            },
+            reject: () => {
+                this.msgs = [{severity:'info', summary:'Rejected', detail:'You have rejected'}];
             }
         });
     }
